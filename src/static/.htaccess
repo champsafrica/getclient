@@ -1,0 +1,42 @@
+# Getclient on Apache (cPanel). Netlify / Cloudflare Pages use _redirects and _headers instead.
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+AddType application/manifest+json .webmanifest
+AddType image/svg+xml .svg
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^search$ /search/ [R=301,L]
+  RewriteRule ^list$ /list/ [R=301,L]
+  RewriteRule ^list-business\.html$ /list/ [R=301,L]
+  RewriteRule ^about$ /about/ [R=301,L]
+  RewriteRule ^index\.html$ / [R=301,L]
+
+  # Profiles approved since the last build have no static page yet:
+  # serve the client-rendered profile, keeping the /b/<slug>/ address.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^b/([A-Za-z0-9_-]+)/?$ /b/profile.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # The badge runs on other people's websites
+  <FilesMatch "^badge\.js$">
+    Header set Access-Control-Allow-Origin "*"
+    Header set Cache-Control "public, max-age=3600"
+  </FilesMatch>
+  <FilesMatch "\.(css|js|svg|png|jpg|webp|woff2)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  <FilesMatch "^(sw\.js|config\.js)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=3600"
+  </FilesMatch>
+</IfModule>

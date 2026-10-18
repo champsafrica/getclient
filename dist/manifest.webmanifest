@@ -1,0 +1,26 @@
+{
+  "name": "Getclient — Verified South African Businesses",
+  "short_name": "Getclient",
+  "description": "South Africa's verified business directory. Attract. Convert. Grow.",
+  "id": "/",
+  "start_url": "/?src=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0B2A6F",
+  "lang": "en-ZA",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    { "src": "/assets/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/brand/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Search the directory", "short_name": "Search", "url": "/search/" },
+    { "name": "List your business", "short_name": "List", "url": "/list/" },
+    { "name": "Get your badge", "short_name": "Badge", "url": "/badge/" }
+  ]
+}

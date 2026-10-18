@@ -1,0 +1,270 @@
+[
+  {
+    "slug": "contractors-and-trades",
+    "name": "Contractors & Trades",
+    "short": "Contractors",
+    "icon": "fa-helmet-safety",
+    "desc": "Builders, electricians, plumbers, roofers and renovation teams.",
+    "lede": "Work that happens on your property, where a wrong hire is expensive to undo. Builders, electricians, plumbers, roofers and renovation teams.",
+    "examples": [
+      "Electricians",
+      "Plumbers",
+      "Builders",
+      "Roofing"
+    ],
+    "covers": [
+      "Electricians",
+      "Plumbers",
+      "Builders",
+      "Roofing",
+      "Painting",
+      "Paving",
+      "Solar Installers",
+      "Handyman"
+    ]
+  },
+  {
+    "slug": "healthcare-and-medical",
+    "name": "Healthcare & Medical",
+    "short": "Healthcare",
+    "icon": "fa-stethoscope",
+    "desc": "Practices, clinics, allied health and home care providers.",
+    "lede": "Care providers where registration and credentials matter more than price. Practices, clinics, allied health and home care providers.",
+    "examples": [
+      "General Practitioners",
+      "Dentists",
+      "Physiotherapy",
+      "Psychology"
+    ],
+    "covers": [
+      "General Practitioners",
+      "Dentists",
+      "Physiotherapy",
+      "Psychology",
+      "Optometry",
+      "Home Nursing",
+      "Pharmacies"
+    ]
+  },
+  {
+    "slug": "legal-services",
+    "name": "Legal Services",
+    "short": "Legal",
+    "icon": "fa-scale-balanced",
+    "desc": "Attorneys, conveyancers, labour specialists and mediators.",
+    "lede": "Matters with deadlines, paperwork and consequences. Attorneys, conveyancers, labour specialists and mediators.",
+    "examples": [
+      "Conveyancing",
+      "Family Law",
+      "Labour Law",
+      "Debt Review"
+    ],
+    "covers": [
+      "Conveyancing",
+      "Family Law",
+      "Labour Law",
+      "Debt Review",
+      "Wills & Estates",
+      "Commercial Law"
+    ]
+  },
+  {
+    "slug": "digital-and-tech",
+    "name": "Digital & Tech",
+    "short": "Digital",
+    "icon": "fa-laptop-code",
+    "desc": "Web, software, IT support, SEO and paid media specialists.",
+    "lede": "Suppliers you will judge on results you can measure. Web, software, IT support, SEO and paid media specialists.",
+    "examples": [
+      "Web Design",
+      "SEO",
+      "Google Ads",
+      "IT Support"
+    ],
+    "covers": [
+      "Web Design",
+      "SEO",
+      "Google Ads",
+      "IT Support",
+      "Software Development",
+      "Cybersecurity",
+      "App Development"
+    ]
+  },
+  {
+    "slug": "creative-services",
+    "name": "Creative Services",
+    "short": "Creative",
+    "icon": "fa-camera-retro",
+    "desc": "Photography, video, branding, print and event production.",
+    "lede": "Work you buy on portfolio, then trust on delivery. Photography, video, branding, print and event production.",
+    "examples": [
+      "Photography",
+      "Videography",
+      "Graphic Design",
+      "Branding"
+    ],
+    "covers": [
+      "Photography",
+      "Videography",
+      "Graphic Design",
+      "Branding",
+      "Printing",
+      "Signage",
+      "Event Production"
+    ]
+  },
+  {
+    "slug": "finance-and-accounting",
+    "name": "Finance & Accounting",
+    "short": "Finance",
+    "icon": "fa-calculator",
+    "desc": "Accountants, tax practitioners, bookkeepers and brokers.",
+    "lede": "People who touch your money and your SARS profile. Accountants, tax practitioners, bookkeepers and brokers.",
+    "examples": [
+      "Accountants",
+      "Tax Practitioners",
+      "Bookkeeping",
+      "Payroll"
+    ],
+    "covers": [
+      "Accountants",
+      "Tax Practitioners",
+      "Bookkeeping",
+      "Payroll",
+      "Financial Advisors",
+      "Insurance Brokers"
+    ]
+  },
+  {
+    "slug": "transport-and-logistics",
+    "name": "Transport & Logistics",
+    "short": "Transport",
+    "icon": "fa-truck-fast",
+    "desc": "Movers, couriers, freight, fleet and vehicle services.",
+    "lede": "Jobs where your goods leave your hands for a while. Movers, couriers, freight, fleet and vehicle services.",
+    "examples": [
+      "Furniture Removals",
+      "Courier Services",
+      "Freight Forwarding",
+      "Vehicle Hire"
+    ],
+    "covers": [
+      "Furniture Removals",
+      "Courier Services",
+      "Freight Forwarding",
+      "Vehicle Hire",
+      "Fleet Management",
+      "Towing"
+    ]
+  },
+  {
+    "slug": "food-and-hospitality",
+    "name": "Food & Hospitality",
+    "short": "Hospitality",
+    "icon": "fa-utensils",
+    "desc": "Caterers, venues, accommodation and mobile kitchens.",
+    "lede": "Bookings with a date that cannot move. Caterers, venues, accommodation and mobile kitchens.",
+    "examples": [
+      "Catering",
+      "Venues",
+      "Guest Houses",
+      "Food Trucks"
+    ],
+    "covers": [
+      "Catering",
+      "Venues",
+      "Guest Houses",
+      "Food Trucks",
+      "Bakeries",
+      "Bar Services"
+    ]
+  },
+  {
+    "slug": "real-estate",
+    "name": "Real Estate",
+    "short": "Property",
+    "icon": "fa-house-chimney",
+    "desc": "Agencies, rental managers, valuers and property inspectors.",
+    "lede": "The largest transaction most people ever make. Agencies, rental managers, valuers and property inspectors.",
+    "examples": [
+      "Estate Agencies",
+      "Rental Management",
+      "Property Valuers",
+      "Home Inspections"
+    ],
+    "covers": [
+      "Estate Agencies",
+      "Rental Management",
+      "Property Valuers",
+      "Home Inspections",
+      "Commercial Property"
+    ]
+  },
+  {
+    "slug": "home-and-garden",
+    "name": "Home & Garden",
+    "short": "Home & Garden",
+    "icon": "fa-seedling",
+    "desc": "Landscaping, cleaning, pest control, pools and security.",
+    "lede": "Recurring services where reliability beats a once-off discount. Landscaping, cleaning, pest control, pools and security.",
+    "examples": [
+      "Landscaping",
+      "Garden Services",
+      "Cleaning Services",
+      "Pest Control"
+    ],
+    "covers": [
+      "Landscaping",
+      "Garden Services",
+      "Cleaning Services",
+      "Pest Control",
+      "Pool Maintenance",
+      "Security Installation"
+    ]
+  },
+  {
+    "slug": "education-and-training",
+    "name": "Education & Training",
+    "short": "Education",
+    "icon": "fa-graduation-cap",
+    "desc": "Tutors, driving schools, skills academies and corporate training.",
+    "lede": "Providers judged on outcomes and accreditation. Tutors, driving schools, skills academies and corporate training.",
+    "examples": [
+      "Tutoring",
+      "Driving Schools",
+      "Skills Training",
+      "Corporate Training"
+    ],
+    "covers": [
+      "Tutoring",
+      "Driving Schools",
+      "Skills Training",
+      "Corporate Training",
+      "Early Learning",
+      "Online Courses"
+    ]
+  },
+  {
+    "slug": "business-services",
+    "name": "Business Services",
+    "short": "Business",
+    "icon": "fa-briefcase",
+    "desc": "Company registration, HR, compliance, admin and consulting.",
+    "lede": "The back office you would rather not run yourself. Company registration, HR, compliance, admin and consulting.",
+    "examples": [
+      "Company Registration",
+      "HR & Recruitment",
+      "Compliance & B-BBEE",
+      "Virtual Assistants"
+    ],
+    "covers": [
+      "Company Registration",
+      "HR & Recruitment",
+      "Compliance & B-BBEE",
+      "Virtual Assistants",
+      "Consulting",
+      "Call Centres"
+    ]
+  }
+]

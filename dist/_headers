@@ -1,0 +1,16 @@
+/badge.js
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600
+/verify/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=1800
+/assets/badge/*
+  Access-Control-Allow-Origin: *
+/sw.js
+  Cache-Control: no-cache
+/config.js
+  Cache-Control: no-cache
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN

@@ -1,0 +1,16 @@
+{
+  "name": "getclient",
+  "private": true,
+  "type": "module",
+  "description": "Getclient — South Africa's verified business directory (getclient.co.za)",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:offline": "node build.mjs --offline",
+    "brand": "node tools/brand.mjs",
+    "serve": "node tools/serve.mjs"
+  },
+  "devDependencies": {
+    "opentype.js": "1.3.4",
+    "sharp": "0.33.5"
+  }
+}

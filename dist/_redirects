@@ -1,0 +1,7 @@
+/search        /search/        301
+/list          /list/          301
+/list-business.html  /list/    301
+/about         /about/         301
+/index.html    /               301
+/b/*           /b/profile.html 200
+/*             /404.html       404

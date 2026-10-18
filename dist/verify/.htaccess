@@ -1,0 +1,5 @@
+# Badge status records, read by badge.js from any website
+<IfModule mod_headers.c>
+  Header set Access-Control-Allow-Origin "*"
+  Header set Cache-Control "public, max-age=1800"
+</IfModule>
