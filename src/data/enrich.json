@@ -6,14 +6,274 @@
     "cover": "/assets/covers/digitalx.webp",
     "cover_fit": "contain",
     "services": [
-      { "name": "Web development", "description": "Fast, mobile-first websites and online stores that bring in enquiries.", "price_from": "From R3,990" },
-      { "name": "Domains and hosting", "description": "Domains, hosting, SSL and business email, looked after.", "price_from": "From R150/month" },
-      { "name": "Custom software", "description": "Web apps, portals and dashboards built around your business.", "price_from": "Quoted in writing" },
-      { "name": "Company registration", "description": "Your Pty Ltd registered with CIPC, plus SARS registration and annual returns.", "price_from": "From R990" },
-      { "name": "Startup bundles", "description": "Registration, website, hosting and growth support, packaged together.", "price_from": "From R499/month" }
+      {
+        "name": "Web development",
+        "description": "Fast, mobile-first websites and online stores that bring in enquiries.",
+        "price_from": "From R3,990"
+      },
+      {
+        "name": "Domains and hosting",
+        "description": "Domains, hosting, SSL and business email, looked after.",
+        "price_from": "From R150/month"
+      },
+      {
+        "name": "Custom software",
+        "description": "Web apps, portals and dashboards built around your business.",
+        "price_from": "Quoted in writing"
+      },
+      {
+        "name": "Company registration",
+        "description": "Your Pty Ltd registered with CIPC, plus SARS registration and annual returns.",
+        "price_from": "From R990"
+      },
+      {
+        "name": "Startup bundles",
+        "description": "Registration, website, hosting and growth support, packaged together.",
+        "price_from": "From R499/month"
+      }
     ],
-    "phones": [["+27218793035", "021 879 3035", "Cape Town"], ["+27616521156", "061 652 1156", "Mobile"]],
+    "phones": [
+      [
+        "+27218793035",
+        "021 879 3035",
+        "Cape Town"
+      ],
+      [
+        "+27616521156",
+        "061 652 1156",
+        "Mobile"
+      ]
+    ],
     "whatsapp": "27218793035",
-    "photos": ["/assets/covers/digitalx.webp"]
+    "photos": [
+      "/assets/covers/digitalx.webp"
+    ]
+  },
+  "gc-430071": {
+    "logo": "/assets/covers/digitalx-icon.png",
+    "services": [
+      {
+        "name": "Basic listing",
+        "description": "A profile with your business description and contact details, checked by a person.",
+        "price_from": "Free"
+      },
+      {
+        "name": "Blue Verified",
+        "description": "Identity and CIPC checked, photos, quote requests and the Blue Verified showcase.",
+        "price_from": "R499 per year"
+      },
+      {
+        "name": "Gold Verified",
+        "description": "The full five checks, ads on every page, services, photos and a cover image.",
+        "price_from": "R1,299 per year"
+      },
+      {
+        "name": "Listed on Getclient badge",
+        "description": "A badge for your website that links visitors to your checked profile.",
+        "price_from": "Included"
+      }
+    ],
+    "email": "info@getclient.co.za"
+  },
+  "gc-977960": {
+    "whatsapp": "27683362633",
+    "services": [
+      {
+        "name": "Carpentry and custom cupboards",
+        "description": "Built-in cupboards, wardrobes, wooden doors and custom cabinetry, made and fitted in Blackheath."
+      },
+      {
+        "name": "Kitchen installations",
+        "description": "Full kitchen design, supply and installation: cupboards, countertops, sinks and fittings."
+      },
+      {
+        "name": "Stove sales and installation",
+        "description": "Gas and electric stoves, ovens and hobs, installed safely by registered technicians."
+      },
+      {
+        "name": "Appliance repairs",
+        "description": "Fast repairs for fridges, freezers, washing machines, dishwashers, stoves and ovens."
+      }
+    ]
+  },
+  "gc-329885": {
+    "whatsapp": "27750268272",
+    "services": [
+      {
+        "name": "General consultations",
+        "description": "Diagnosis and treatment of acute and minor illnesses, medical certificates and follow-ups.",
+        "price_from": "R350"
+      },
+      {
+        "name": "Chronic disease management",
+        "description": "Ongoing care for diabetes, hypertension, asthma, cholesterol, thyroid, arthritis and HIV.",
+        "price_from": "R500"
+      },
+      {
+        "name": "Women's health and family planning",
+        "description": "Pap smears, breast exams, pregnancy tests, contraception, implants and IUDs.",
+        "price_from": "From R150"
+      },
+      {
+        "name": "HIV testing and treatment",
+        "description": "Confidential testing, PrEP, ART, STI treatment and counselling.",
+        "price_from": "R350"
+      },
+      {
+        "name": "Child health and immunisations",
+        "description": "Baby and child check-ups, immunisations, growth monitoring and childhood illnesses.",
+        "price_from": "From R100"
+      },
+      {
+        "name": "Maternity care",
+        "description": "Antenatal and postnatal care, breastfeeding advice and mother-and-baby checks.",
+        "price_from": "From R450"
+      },
+      {
+        "name": "Vaccines and injections",
+        "description": "Vitamin B12, hepatitis B, tetanus and flu vaccines, and pain-relief injections.",
+        "price_from": "From R150"
+      },
+      {
+        "name": "IV wellness therapies",
+        "description": "IV drips for energy, rehydration, immunity and detox.",
+        "price_from": "Priced on consultation"
+      }
+    ]
+  },
+  "gc-962585": {
+    "whatsapp": "27641790640",
+    "services": [
+      {
+        "name": "Swedish massage",
+        "description": "Classic, relaxing full-body massage for stress relief.",
+        "price_from": "From R250"
+      },
+      {
+        "name": "Deep tissue massage",
+        "description": "Deeper muscle work for chronic pain, tension and post-exercise soreness.",
+        "price_from": "From R300"
+      },
+      {
+        "name": "Prenatal massage",
+        "description": "Safe massage for expectant mothers by certified therapists.",
+        "price_from": "From R300"
+      },
+      {
+        "name": "Hot stone massage",
+        "description": "Therapeutic massage using heated stones.",
+        "price_from": "From R300"
+      },
+      {
+        "name": "Couples massage",
+        "description": "A massage for two together at the Bellville studio.",
+        "price_from": "R800"
+      },
+      {
+        "name": "Mobile massage",
+        "description": "Any massage at your home, hotel, Airbnb or office.",
+        "price_from": "Travel fee R100–R200"
+      },
+      {
+        "name": "Cupping therapy",
+        "description": "Advanced therapy for deep recovery.",
+        "price_from": "R700"
+      },
+      {
+        "name": "Aesthetics and nails",
+        "description": "Lash extensions, gel nails, soft gel tips and manicures.",
+        "price_from": "From R180"
+      }
+    ]
+  },
+  "gc-693296": {
+    "whatsapp": "27731221382",
+    "services": [
+      {
+        "name": "Aluminium windows",
+        "description": "Custom-sized, weather-sealed windows powder-coated in any colour, with multi-point locking."
+      },
+      {
+        "name": "Aluminium doors",
+        "description": "Pivot, hinged, sliding and stacking door systems with commercial-grade hardware."
+      },
+      {
+        "name": "Trellis security doors",
+        "description": "Heavy-gauge steel or aluminium security doors, bi-fold and retractable."
+      },
+      {
+        "name": "Steel gates",
+        "description": "Custom sliding and swing gates, galvanised, powder-coated and ready for motors."
+      },
+      {
+        "name": "Glass installation",
+        "description": "Framed and frameless glass for shopfronts, balustrades, partitions and showers."
+      },
+      {
+        "name": "Sliding windows",
+        "description": "Windows on stainless steel roller tracks with fly-screens and key locks."
+      }
+    ]
+  },
+  "gc-928905": {
+    "whatsapp": "27752744560",
+    "services": [
+      {
+        "name": "Photocopying and printing",
+        "description": "CVs, school projects, assignments, forms, manuals and office print runs.",
+        "price_from": "From R1.50 a page"
+      },
+      {
+        "name": "T-shirt printing",
+        "description": "Staff uniforms, team kits, school and church events, matric hoodies and merch.",
+        "price_from": "From R70 each"
+      },
+      {
+        "name": "Business cards",
+        "description": "Cards on proper board, cut cleanly, with in-house design.",
+        "price_from": "R180 for 100"
+      },
+      {
+        "name": "Flyers and posters",
+        "description": "For specials, launches, church events, fundraisers and grand openings.",
+        "price_from": "R250 for 100 A5"
+      },
+      {
+        "name": "Stickers and labels",
+        "description": "Jar and bottle labels, logo stickers, window stickers and durable vinyl.",
+        "price_from": "From R220"
+      },
+      {
+        "name": "Banners and signage",
+        "description": "Pull-up, X and PVC banners for expos and stalls, plus shop signs.",
+        "price_from": "From R280"
+      },
+      {
+        "name": "Vehicle branding",
+        "description": "Branding for bakkies and vans, from magnetic signs to full wraps.",
+        "price_from": "From R650"
+      },
+      {
+        "name": "Logo and graphic design",
+        "description": "Artwork from an in-house design team that works on screen and in print.",
+        "price_from": "From R250"
+      }
+    ]
+  },
+  "gc-629711": {
+    "services": [
+      {
+        "name": "US DS-160 visa application",
+        "description": "Full help completing the DS-160 US visa form, checked against State Department standards."
+      },
+      {
+        "name": "US visa appointment scheduling",
+        "description": "Embassy portal setup, fee payment and watching for earlier appointment slots."
+      },
+      {
+        "name": "Schengen visa application",
+        "description": "From choosing the right embassy to a file that is ready to submit."
+      }
+    ]
   }
 }

@@ -40,7 +40,7 @@
     ['details', 'The business details are incomplete or inaccurate.',
       'Complete every required field with your registered business name, a real description and working contact details.'],
     ['duplicate', 'This business is already listed on Getclient.',
-      'Contact hello@digitalxagency.io to manage or upgrade your existing listing instead of applying again.'],
+      'Contact info@getclient.co.za to manage or upgrade your existing listing instead of applying again.'],
     ['other', '', '']
   ];
 

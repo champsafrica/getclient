@@ -1,9 +1,9 @@
 // Email through Resend (https://resend.com). Function secrets:
 //   RESEND_API_KEY   required
-//   MAIL_FROM        e.g. "Getclient <hello@getclient.co.za>" (the domain must be verified in Resend)
-//   MAIL_CC          defaults to hello@digitalxagency.io, copied on every email
+//   MAIL_FROM        e.g. "Getclient <info@getclient.co.za>" (the domain must be verified in Resend)
+//   MAIL_CC          defaults to info@getclient.co.za, copied on every email
 const ORIGIN = 'https://getclient.co.za';
-export const CC = Deno.env.get('MAIL_CC') || 'hello@digitalxagency.io';
+export const CC = Deno.env.get('MAIL_CC') || 'info@getclient.co.za';
 
 export const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -16,7 +16,7 @@ export async function send(o: { to: string; subject: string; html: string; reply
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: Deno.env.get('MAIL_FROM') || 'Getclient <hello@getclient.co.za>',
+      from: Deno.env.get('MAIL_FROM') || 'Getclient <info@getclient.co.za>',
       to: [o.to], cc, subject: o.subject, html: o.html,
       ...(o.replyTo ? { reply_to: o.replyTo } : {}),
     }),
@@ -39,7 +39,7 @@ export function shell(title: string, body: string, tier?: string) {
 <tr><td style="padding:18px 28px;background:#F6F8FF;border-top:1px solid #DCE4F7;font-size:12px;color:#55658C">
 <a href="${ORIGIN}"><img src="${tierBadge(tier)}" alt="Listed on Getclient" height="42" style="display:block;border:0;margin-bottom:10px"></a>
 Getclient, South Africa's verified business directory · Developed and Managed by <a href="https://www.digitalxagency.io" style="color:#1652F0">Digitalx</a><br>
-<a href="mailto:hello@digitalxagency.io" style="color:#1652F0">hello@digitalxagency.io</a> · 021 879 3035</td></tr>
+<a href="mailto:info@getclient.co.za" style="color:#1652F0">info@getclient.co.za</a> · 021 879 3035</td></tr>
 </table></td></tr></table></body></html>`;
 }
 

@@ -39,7 +39,7 @@ drop trigger if exists gc_require_badge on public.gc_listings;
 create trigger gc_require_badge before update of status on public.gc_listings
   for each row execute function public.gc_require_badge();
 
-/* ------------------------------------------------------------------ services (Gold only) */
+/* ------------------------------------------------------------------ services (Blue: 8, Gold: 12) */
 create table if not exists public.gc_services (
   id          uuid primary key default gen_random_uuid(),
   listing_id  text not null,                -- gc_listings.public_id
@@ -54,7 +54,7 @@ alter table public.gc_services enable row level security;
 
 drop policy if exists gc_services_read on public.gc_services;
 create policy gc_services_read on public.gc_services for select
-  using (exists (select 1 from public.gc_listings_public p where p.id = listing_id and p.tier = 'gold'));
+  using (exists (select 1 from public.gc_listings_public p where p.id = listing_id and p.tier in ('gold', 'blue')));
 -- Inserts come from submit-listing (service role) or the Supabase dashboard.
 
 insert into public.gc_services (listing_id, name, description, price_from, sort)

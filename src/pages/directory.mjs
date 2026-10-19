@@ -276,7 +276,7 @@ export function search(ctx) {
 /* ================================================================ profile
  * What a profile shows depends on the tier:
  *   Gold   cover image, services, photos, quote form, WhatsApp, every phone line
- *   Blue   photos, quote form, WhatsApp
+ *   Blue   up to 8 services, photos, quote form, WhatsApp
  *   Basic  a description and contact details, and that is all                  */
 export function quoteForm(b) {
   return `<div class="card" id="quote"><h3>Request a quote</h3><p style="font-size:.86rem">Sent straight to ${esc(b.name)} by email. We log whether they reply and publish the response rate.</p>
@@ -351,7 +351,7 @@ export function profile(ctx, b, badgeSizes) {
   <div>
     ${b.tagline && !(gold && cover) ? `<p class="lede" style="color:var(--head);font-weight:500;margin-bottom:1.4rem">${esc(b.tagline)}</p>` : ''}
     <h2>About</h2><p class="about">${esc(b.description || b.tagline || '')}</p>
-    ${gold ? `<h2>Services</h2><div data-gc-services="${esc(b.id)}">${servicesHTML(b.services) || '<p class="mut">Services are being added.</p>'}</div>` : ''}
+    ${paid && (gold || (b.services && b.services.length)) ? `<h2>Services</h2><div data-gc-services="${esc(b.id)}">${servicesHTML(b.services) || '<p class="mut">Services are being added.</p>'}</div>` : ''}
     ${paid ? `<div id="gc-gallery" data-gc-gallery="${esc(b.id)}"${photos.length ? ' class="gallery"' : ''}>${photos.map(p => `<a class="gallery__i" href="${esc(p)}" target="_blank" rel="noopener"><img src="${esc(p)}" alt="${esc(b.name)}" loading="lazy"${b.cover_fit === 'contain' ? ' class="fit-contain"' : ''}></a>`).join('')}</div>` : ''}
     <h2>Verification record</h2>${ledger(b)}
     <p class="mut" style="font-size:.84rem;margin-top:.8rem">${verified ? `Last verified ${verified}. ` : ''}Checks are re-run every 12 months. <a href="/verification/">What each check means</a>.</p>
@@ -404,7 +404,7 @@ export function profile(ctx, b, badgeSizes) {
   if (b.website) ld.sameAs = [b.website];
   if (b.rating_count) ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: Number(b.avg_rating).toFixed(1), ratingCount: b.rating_count, bestRating: 5, worstRating: 1 };
   if (cover) ld.image = cover.startsWith('/') ? SITE.origin + cover : cover;
-  if (gold && b.services && b.services.length) ld.makesOffer = b.services.map(s => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name, description: s.description || '' } }));
+  if (paid && b.services && b.services.length) ld.makesOffer = b.services.map(s => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name, description: s.description || '' } }));
   return layout({ title: `${b.name} — ${b.subcategory || b.category_name || 'Business'} in ${cityName(b)}`, path: `/b/${b.slug}/`, page: 'profile', body,
     turnstile: paid, ogImage: cover ? (cover.startsWith('/') ? SITE.origin + cover : cover) : '',
     desc: (b.tagline || b.description || `${b.name} on Getclient`).slice(0, 158), ld: [crumbLD(it), ld] });

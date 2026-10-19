@@ -82,8 +82,8 @@ export function list() {
         </div>
         <div class="f"><label for="bci">CIPC registration number <span data-req-cipc hidden>*</span></label><input id="bci" name="cipc" placeholder="2019/123456/07"><span class="hint">Required for Blue and Gold. Checked against the CIPC register.</span></div>
       </fieldset>
-      <fieldset class="fs" data-plan-only="gold" hidden><legend>Your services <span class="tier tier--gold" style="margin-left:.3rem">Gold</span></legend>
-        <p class="hint" style="margin:0">List up to 12 services. They appear on your profile with your contact details.</p>
+      <fieldset class="fs" data-plan-only="blue gold" hidden><legend>Your services <span class="tier tier--blue" style="margin-left:.3rem">Blue and Gold</span></legend>
+        <p class="hint" style="margin:0">Blue: up to 8 services. Gold: up to 12. They appear on your profile with your contact details.</p>
         <div id="gc-services"></div>
         <button type="button" class="btn btn-g btn-s" id="gc-add-service" style="justify-self:start"><i class="fa-solid fa-plus"></i> Add a service</button>
       </fieldset>
@@ -91,7 +91,7 @@ export function list() {
         <div class="f"><label for="bphotos">Photos of your work, premises or team</label><input id="bphotos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="hint" id="gc-photo-hint">Blue: up to 6 images. Gold: up to 20. 5&nbsp;MB each. The first becomes your cover image.</span></div>
         <div id="gc-photo-preview" class="thumbs"></div>
       </fieldset>
-      <p class="note" data-plan-only="basic" style="font-size:.86rem">Basic listings show your description and contact details only. Photos, services and quote requests come with <a href="/pricing/#compare">Blue and Gold</a>.</p>
+      <p class="note" data-plan-only="basic" style="font-size:.86rem">Basic listings show your description and contact details only. Services, photos and quote requests come with <a href="/pricing/#compare">Blue and Gold</a>.</p>
       <div class="pane-nav"><button type="button" class="btn btn-g" data-back="1">Back</button><button type="button" class="btn btn-p" data-next="3">Continue <i class="fa-solid fa-arrow-right"></i></button></div>
     </div>
 
@@ -168,7 +168,7 @@ export function pricing() {
   ${plan('', '<span class="tier tier--none">Basic</span>', 'R0', 'free forever', 'A description of your business and your contact details. That is all.',
     [[1, 'Directory listing and profile page'], [1, 'Business description'], [1, 'Contact details'], [1, '<b>Listed on Getclient</b> badge (required)'], [0, 'Photos'], [0, 'Services list'], [0, 'Quote requests'], [0, 'Promotion']], '/list/?plan=basic', 'Start free', 'btn-g')}
   ${plan(' plan--feature', `<span class="tier tier--blue">${seal('blue')} Blue Verified</span>`, SITE.prices.blue, SITE.period, 'Identity and CIPC confirmed, and recognised across the whole site.',
-    [[1, 'Everything in Basic'], [1, 'Blue seal next to your name'], [1, 'Identity + CIPC check'], [1, 'Up to 6 photos'], [1, 'Quote requests emailed to you'], [1, 'WhatsApp button'], [1, 'Blue Verified showcase on every page, under Gold'], [1, 'Ranked above every Basic listing'], [0, 'Services list'], [0, 'Ads on every page']], '/list/?plan=blue', 'Apply for Blue Verified', 'btn-p')}
+    [[1, 'Everything in Basic'], [1, 'Blue seal next to your name'], [1, 'Identity + CIPC check'], [1, 'Up to 6 photos'], [1, 'Quote requests emailed to you'], [1, 'WhatsApp button'], [1, 'Blue Verified showcase on every page, under Gold'], [1, 'Ranked above every Basic listing'], [1, 'List up to 8 services'], [0, 'Ads on every page']], '/list/?plan=blue', 'Apply for Blue Verified', 'btn-p')}
   ${plan(' plan--gold', `<span class="tier tier--gold">${seal('gold')} Gold Verified</span>`, SITE.prices.gold, SITE.period, 'The full check, and your business advertised on every page of Getclient.',
     [[1, 'Everything in Blue'], [1, 'Gold seal next to your name'], [1, 'Insurance, tax clearance, 3+ years trading'], [1, '<b>Ads on every page and section</b>'], [1, 'List up to 12 services'], [1, 'Up to 20 photos and a cover image'], [1, 'Top of every list'], [1, 'Dedicated account manager']], '/list/?plan=gold', 'Apply for Gold Verified', 'btn-gold')}
 </div></div></section>

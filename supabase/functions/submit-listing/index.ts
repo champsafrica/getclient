@@ -1,6 +1,6 @@
 // POST { p: <listing fields>, token, services?: [{name, description}], payment_reference? }
 // Verifies Turnstile and the Listed on Getclient badge on the applicant's website,
-// creates the listing through gc_submit_listing, stores Gold services, and sends
+// creates the listing through gc_submit_listing, stores Blue and Gold services, and sends
 // the welcome email.
 import { cors, json, clientIp, clean } from '../_shared/http.ts';
 import { verifyTurnstile } from '../_shared/turnstile.ts';
@@ -44,8 +44,8 @@ Deno.serve(async (req) => {
   }).eq('public_id', id);
 
   const plan = clean(p.requested_plan, 10) || 'basic';
-  if (plan === 'gold' && Array.isArray(b.services)) {
-    const rows = (b.services as Record<string, unknown>[]).slice(0, 12)
+  if ((plan === 'gold' || plan === 'blue') && Array.isArray(b.services)) {
+    const rows = (b.services as Record<string, unknown>[]).slice(0, plan === 'gold' ? 12 : 8)
       .map((s, i) => ({ listing_id: id, name: clean(s.name, 80), description: clean(s.description, 280), sort: i }))
       .filter((s) => s.name.length >= 2);
     if (rows.length) await admin.from('gc_services').insert(rows);

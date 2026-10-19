@@ -209,7 +209,7 @@
         '<section class="sec" style="padding-top:2.6rem"><div class="wrap"><div class="profile"><div>' +
         (b.tagline ? '<p class="lede" style="color:var(--head);font-weight:500;margin-bottom:1.4rem">' + esc(b.tagline) + '</p>' : '') +
         '<h2>About</h2><p class="about">' + esc(b.description || '') + '</p>' +
-        (gold ? '<h2>Services</h2><div data-gc-services="' + esc(b.id) + '"><p class="mut">Services are being added.</p></div>' : '') +
+        (paid ? '<h2>Services</h2><div data-gc-services="' + esc(b.id) + '"><p class="mut">Services are being added.</p></div>' : '') +
         (paid ? '<div id="gc-gallery" data-gc-gallery="' + esc(b.id) + '"></div>' : '') +
         '<h2>Verification record</h2>' + ledger +
         '<h2>Rating</h2><div class="rater" data-gc-rater="' + esc(b.id) + '">' +
@@ -245,7 +245,7 @@
         '</aside></div></div></section>';
 
       if (paid) loadGallery(b.id);
-      if (gold) loadServices(b.id);
+      if (paid) loadServices(b.id);
       wireRater();
       wireQuote();
     });

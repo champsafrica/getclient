@@ -460,13 +460,13 @@
         n.hidden = n.getAttribute('data-plan-only').split(' ').indexOf(p) === -1;
       });
       if (p === 'basic' && $('#bphotos')) { $('#bphotos').value = ''; $('#gc-photo-preview').innerHTML = ''; }
-      if (p === 'gold' && !$$('.svc-row', listForm).length) addService();
+      if (p !== 'basic' && !$$('.svc-row', listForm).length) addService();
     }
 
     /* ---- Gold services ---- */
     var svcBox = $('#gc-services');
     function addService() {
-      if (!svcBox || $$('.svc-row', svcBox).length >= 12) return;
+      if (!svcBox || $$('.svc-row', svcBox).length >= (plan() === 'gold' ? 12 : 8)) return;
       var row = document.createElement('div');
       row.className = 'svc-row';
       row.innerHTML = '<input placeholder="Service, e.g. Website design" maxlength="80" data-svc="name">' +
@@ -757,7 +757,7 @@
       if (!LIVE) {
         out.className = 'msg note note--w';
         out.innerHTML = 'The database is not connected. Email the details to ' +
-          '<a href="mailto:hello@digitalxagency.io">hello@digitalxagency.io</a>.';
+          '<a href="mailto:info@getclient.co.za">info@getclient.co.za</a>.';
         return;
       }
 
@@ -815,7 +815,7 @@
         // pending rows to a SELECT policy.
         // submit-listing checks Turnstile and the badge on the server, then sends the
         // welcome email. Before it is deployed, fall back to the database function.
-        return callFn('submit-listing', { p: data, token: token, services: thePlan === 'gold' ? services() : [], payment_reference: reference })
+        return callFn('submit-listing', { p: data, token: token, services: thePlan === 'basic' ? [] : services().slice(0, thePlan === 'gold' ? 12 : 8), payment_reference: reference })
           .then(function (f) {
             if (f.status === 404 || f.status === 0) return sb.rpc('gc_submit_listing', { p: data });
             if (listTs) listTs.reset();
@@ -841,8 +841,8 @@
             }
             out.textContent = 'That did not save: ' + why +
               '. ' + (reference ? 'Your payment went through (ref ' + reference + ') — email ' +
-              'hello@digitalxagency.io with that reference and we will finish it by hand.'
-              : 'You can also email hello@digitalxagency.io.');
+              'info@getclient.co.za with that reference and we will finish it by hand.'
+              : 'You can also email info@getclient.co.za.');
             return;
           }
           var listing = r.data[0];
@@ -934,7 +934,7 @@
 
   /* ================================================== quote requests */
   // Quote requests go through submit-quote: Turnstile is checked on the server and
-  // the request is emailed to the business owner, with hello@digitalxagency.io copied.
+  // the request is emailed to the business owner, with info@getclient.co.za copied.
   function wireQuote(quoteForm) {
     if (!quoteForm || quoteForm.dataset.wired) return;
     quoteForm.dataset.wired = '1';
@@ -944,8 +944,8 @@
       var out = $('#gc-quote-status', quoteForm), data = {};
       new FormData(quoteForm).forEach(function (v, k) { if (k !== 'cf-turnstile-response') data[k] = v; });
       if (!LIVE) {
-        location.href = 'mailto:' + (quoteForm.getAttribute('data-email') || 'hello@digitalxagency.io') +
-          '?cc=hello@digitalxagency.io&subject=' + encodeURIComponent('Quote request via Getclient') +
+        location.href = 'mailto:' + (quoteForm.getAttribute('data-email') || 'info@getclient.co.za') +
+          '?cc=info@getclient.co.za&subject=' + encodeURIComponent('Quote request via Getclient') +
           '&body=' + encodeURIComponent(Object.keys(data).map(function (k) { return k + ': ' + data[k]; }).join('\n'));
         return;
       }

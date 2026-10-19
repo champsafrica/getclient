@@ -14,8 +14,8 @@ run against the existing Supabase project, and the build only **reads** the
 | Listed on Getclient badge on own website | Required | Required | Required |
 | Description and contact details | Yes | Yes | Yes |
 | Photos | No | Up to 6 | Up to 20 + cover |
-| Services list | No | No | Up to 12 |
-| Quote requests (emailed to the owner, hello@digitalxagency.io copied) | No | Yes | Yes |
+| Services list | No | Up to 8 | Up to 12 |
+| Quote requests (emailed to the owner, info@getclient.co.za copied) | No | Yes | Yes |
 | Promotion | None | Blue Verified showcase on every page, under Gold | Ads on every page: top bar, featured block, first in every list, search, profile sidebars |
 
 The full benefit table is on `/pricing/` and lives in `src/data/site.mjs` (`TIERS`).
@@ -43,8 +43,8 @@ Do the steps **in this order** (the migration switches off the old direct writes
    | `TURNSTILE_SECRET` | The secret key of the Turnstile widget `0x4AAAAAAFavP5vcRoKQ-O30` (Cloudflare dashboard → Turnstile) |
    | `TURNSTILE_HOSTNAMES` | `getclient.co.za,www.getclient.co.za` |
    | `RESEND_API_KEY` | From step 1 |
-   | `MAIL_FROM` | e.g. `Getclient <hello@getclient.co.za>` |
-   | `MAIL_CC` | `hello@digitalxagency.io` (the default) |
+   | `MAIL_FROM` | e.g. `Getclient <info@getclient.co.za>` |
+   | `MAIL_CC` | `info@getclient.co.za` (the default) |
    | `MAILER_HOOK_SECRET` | From step 5 |
 4. **Run the migration.** Paste `supabase/migrations/20261019000000_tiers_badges_email.sql` into the
    SQL editor and run it (or `supabase db push`).
@@ -54,7 +54,7 @@ Do the steps **in this order** (the migration switches off the old direct writes
 6. **Turnstile hostnames.** In Cloudflare → Turnstile → the widget, make sure `getclient.co.za`
    and `www.getclient.co.za` are listed. Add `localhost` only while testing locally.
 7. **Test** one real quote request and one listing on the live site: the business owner and
-   hello@digitalxagency.io should both get the quote email, and the applicant a welcome email.
+   info@getclient.co.za should both get the quote email, and the applicant a welcome email.
 
 What changes once this is done:
 * Every application (all tiers) must show the badge on its website; `submit-listing` refuses

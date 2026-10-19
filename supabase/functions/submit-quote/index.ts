@@ -1,6 +1,6 @@
 // POST { business_id, name, email, phone, details, token }
 // Verifies Turnstile, saves the quote request, and emails it to the business
-// owner with hello@digitalxagency.io copied in.
+// owner with info@getclient.co.za copied in.
 import { cors, json, clientIp, clean } from '../_shared/http.ts';
 import { verifyTurnstile } from '../_shared/turnstile.ts';
 import { admin } from '../_shared/db.ts';
