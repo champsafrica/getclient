@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { setBuild, esc, photoURL, SITE, CATS, CITIES } from './src/lib.mjs';
+import { setBuild, setPromo, esc, photoURL, SITE, CATS, CITIES } from './src/lib.mjs';
 import { PROVINCES, CHECKS } from './src/data/site.mjs';
 import * as D from './src/pages/directory.mjs';
 import * as P from './src/pages/content.mjs';
@@ -18,6 +18,17 @@ const DIST = path.join(ROOT, 'dist');
 const CACHE = path.join(ROOT, '.cache', 'listings.json');
 const CFG = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'config.json'), 'utf8'));
 const offline = process.argv.includes('--offline');
+
+// Gold services from gc_services (added by the migration). Missing table: none yet.
+async function pullServices() {
+  if (offline) { try { return JSON.parse(fs.readFileSync(CACHE.replace('listings', 'services'), 'utf8')); } catch { return []; } }
+  const r = await fetch(`${CFG.supabaseUrl}/rest/v1/${CFG.tablePrefix}services?select=listing_id,name,description,price_from,sort&order=sort.asc`,
+    { headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}` } });
+  const rows = r.ok ? await r.json() : [];
+  fs.mkdirSync(path.dirname(CACHE), { recursive: true });
+  fs.writeFileSync(CACHE.replace('listings', 'services'), JSON.stringify(rows));
+  return rows;
+}
 
 async function pull() {
   if (offline) return JSON.parse(fs.readFileSync(CACHE, 'utf8'));
@@ -46,6 +57,19 @@ function copyDir(src, dst) {
 
 async function main() {
   const rows = await pull();
+  // Profile content kept in the repo (cover, services, phones) merges onto the database row.
+  const enrich = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'data', 'enrich.json'), 'utf8'));
+  const services = await pullServices();
+  for (const b of rows) {
+    Object.assign(b, enrich[b.id] || {});
+    const db = services.filter(s => s.listing_id === b.id);
+    if (db.length) b.services = db;
+    if (b.tier === 'gold') b.sponsored = true;            // Gold is always advertised
+  }
+  // Gold first, then Blue, then Basic, everywhere.
+  const rank = b => (b.tier === 'gold' ? 2 : b.tier === 'blue' ? 1 : 0);
+  rows.sort((a, b) => rank(b) - rank(a) || (Number(b.avg_rating) || 0) - (Number(a.avg_rating) || 0) || String(a.created_at).localeCompare(String(b.created_at)));
+  setPromo({ gold: rows.filter(b => b.tier === 'gold'), blue: rows.filter(b => b.tier === 'blue'), cfg: CFG });
   const now = new Date();
   const hash = crypto.createHash('sha1').update(JSON.stringify(rows) + fs.readFileSync(path.join(ROOT, 'src/static/assets/theme.css')) +
     fs.readFileSync(path.join(ROOT, 'src/static/assets/app.js')) + fs.readFileSync(path.join(ROOT, 'src/static/assets/live.js')) + now.toISOString().slice(0, 10)).digest('hex').slice(0, 10);

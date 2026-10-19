@@ -17,7 +17,9 @@ export const SITE = {
     ['https://threads.net/@digitalxagencyio', 'fa-brands fa-threads', 'Threads'],
     ['https://wa.me/27218793035', 'fa-brands fa-whatsapp', 'WhatsApp']
   ],
-  prices: { blue: 'R499', gold: 'R1,299' }
+  prices: { blue: 'R499', gold: 'R1,299' },
+  period: 'per year',
+  turnstileSiteKey: '0x4AAAAAAFavP5vcRoKQ-O30'
 };
 
 export const CATS = JSON.parse(fs.readFileSync(new URL('./cats.json', import.meta.url), 'utf8'));
@@ -68,3 +70,26 @@ export const CHECKS = [
 export const catBy = Object.fromEntries(CATS.map(c => [c.slug, c]));
 export const cityBy = Object.fromEntries(CITIES.map(c => [c.slug, c]));
 export const provBy = Object.fromEntries(PROVINCES.map(p => [p.slug, p]));
+
+// What each tier gets. Drives the pricing comparison table and the plan cards.
+// true / false, or a short string shown in the cell.
+export const TIERS = [
+  ['Price', 'Free', 'R499 per year', 'R1,299 per year'],
+  ['Listed on Getclient badge on your website', 'Required', 'Required, shows Blue Verified', 'Required, shows Gold Verified'],
+  ['Directory listing and profile page', true, true, true],
+  ['Business description', true, true, true],
+  ['Contact details (phone, email, website)', true, true, true],
+  ['WhatsApp button', false, true, true],
+  ['Quote requests from clients, emailed to you', false, true, true],
+  ['Photos', false, 'Up to 6', 'Up to 20, plus a cover image'],
+  ['List your services', false, false, 'Up to 12 services'],
+  ['Identity and CIPC check', false, true, true],
+  ['Insurance, tax clearance and 3+ years trading checked', false, false, true],
+  ['Verified seal next to your name', false, 'Blue seal', 'Gold seal'],
+  ['Search ranking', 'After verified listings', 'Above all Basic listings', 'Top of every list'],
+  ['Promotion', false, 'Blue Verified showcase on every page, under Gold', 'Ads on every page and section of the site'],
+  ['Featured on the homepage, your category and your city', false, 'In the Blue Verified row', 'In the sponsored Gold slots'],
+  ['Highlighted listing card', false, 'Blue verified ribbon', 'Gold border and Ad tag'],
+  ['Re-verification every 12 months', false, true, true],
+  ['Support', 'Email', 'Priority support', 'Dedicated account manager']
+];

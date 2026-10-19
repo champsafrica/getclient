@@ -1,0 +1,13 @@
+# Edge function settings. The browser calls the first three with the publishable
+# key; gc-mailer is called by a database trigger and checks its own shared secret.
+[functions.submit-quote]
+verify_jwt = false
+
+[functions.submit-listing]
+verify_jwt = false
+
+[functions.check-badge]
+verify_jwt = false
+
+[functions.gc-mailer]
+verify_jwt = false

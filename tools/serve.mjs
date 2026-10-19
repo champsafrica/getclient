@@ -23,6 +23,7 @@ http.createServer((req, res) => {
   let f = file(p), status = 200;
   if (!f && /^\/b\/[A-Za-z0-9_-]+\/?$/.test(p)) f = file('/b/profile.html');
   if (!f) { f = file('/404.html'); status = 404; }
+  if (!f) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found (is dist/ being rebuilt?)'); return; }
   const headers = { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-cache' };
   if (p === '/badge.js' || p.startsWith('/verify/') || p.startsWith('/assets/badge/')) headers['Access-Control-Allow-Origin'] = '*';
   res.writeHead(status, headers);

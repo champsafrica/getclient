@@ -1,6 +1,6 @@
 import {
   esc, layout, starButtons, initials, card, feat, listingGrid, crumbs, crumbLD, seal, rating, tierChip, ySvg, flagSvg, avatar,
-  loc, cityName, provName, SITE, CATS, CITIES, catBy, cityBy, provBy
+  loc, cityName, provName, SITE, CATS, CITIES, catBy, cityBy, provBy, isGold, isBlue, isPaid, coverOf, blueChip, promoGold
 } from '../lib.mjs';
 import { PROVINCES, GREETINGS, CHECKS } from '../data/site.mjs';
 
@@ -28,10 +28,16 @@ const counts = rows => {
   rows.forEach(b => { cat[b.category] = (cat[b.category] || 0) + 1; city[b.city] = (city[b.city] || 0) + 1; prov[b.province] = (prov[b.province] || 0) + 1; pair[b.category + '|' + b.city] = (pair[b.category + '|' + b.city] || 0) + 1; });
   return { cat, city, prov, pair };
 };
-const featured = rows => rows.filter(b => b.sponsored);
-const featBlock = (rows, label) => !rows.length ? '' : `<section class="sec sec--tight sec--surf"><div class="wrap">
-  <div class="head"><div><p class="eyebrow">${label}</p></div><span class="adnote">Paid placement · included with Gold Verified · always labelled Ad</span></div>
-  <div class="feats">${rows.map(feat).join('')}</div></div></section>`;
+// Gold first (sponsored, labelled Ad), then the Blue Verified showcase, in every list section.
+const featBlock = (rows, label, cfg) => {
+  const gold = rows.filter(isGold), blue = rows.filter(isBlue);
+  if (!gold.length && !blue.length) return '';
+  return `<section class="sec sec--tight sec--surf"><div class="wrap">
+  ${gold.length ? `<div class="head"><div><p class="eyebrow">Sponsored · ${label}</p></div><span class="adnote">Gold Verified businesses · always labelled Ad</span></div>
+  <div class="feats">${gold.map(x => feat(x, cfg)).join('')}</div>` : ''}
+  ${blue.length ? `<div class="bluerow"${gold.length ? '' : ' style="margin-top:0;border-top:0;padding-top:0"'}><p class="eyebrow" style="margin-bottom:.8rem">${seal('blue', 'seal--sm')} Blue Verified</p>
+  <div class="bchips">${blue.map(blueChip).join('')}</div></div>` : ''}</div></section>`;
+};
 
 /* ================================================================ home */
 export function home(ctx) {
@@ -79,7 +85,7 @@ export function home(ctx) {
   <p class="mut" style="font-size:.8rem;margin:.8rem 0 0" data-gc-stats>Figures are read live from the directory database, so they are always the real count.</p>
 </div></section>
 
-${featBlock(featured(rows), 'Featured businesses')}
+${featBlock(rows, 'Featured Gold businesses', cfg)}
 
 <section class="sec"><div class="wrap">
   <div class="head"><div><p class="eyebrow">The directory today</p><h2 data-gc-headline>${rows.length} businesses, every one checked</h2></div>
@@ -120,7 +126,7 @@ ${featBlock(featured(rows), 'Featured businesses')}
     <h2>Every listing carries the badge</h2>
     <p class="lede">Each business on Getclient puts the <b>Listed on Getclient</b> badge on its own website. A visitor clicks it and lands on that business's checked record here, so the trust travels with them.</p>
     <ul class="ticks">
-      <li><span><b>Free with every listing.</b> Basic listings show "Listed on Getclient". Blue and Gold show their tier.</span></li>
+      <li><span><b>Required on every tier.</b> No listing is approved until the badge is on the business's website. Basic shows "Listed on Getclient"; Blue and Gold show their tier.</span></li>
       <li><span><b>It checks itself.</b> The badge reads its status live and disappears if a listing lapses.</span></li>
       <li><span><b>One line of code.</b> Paste it once; it works on WordPress, Wix, Shopify and hand-built sites.</span></li>
     </ul>
@@ -200,8 +206,8 @@ export function category(ctx, c, city) {
     <a class="btn btn-g btn-s" href="/search/?cat=${c.slug}${city ? '&amp;loc=' + city.slug : ''}"><i class="fa-solid fa-sliders"></i> Filter and search</a></div>
     ${listingGrid(list, cfg, [`No ${c.short.toLowerCase()} listings${city ? ' in ' + city.name : ''} yet`, `Nothing here has cleared review yet. Local businesses can list free and appear here once approved.`])}
   </div></section>
-  ${featBlock(featured(list), 'Featured ' + c.short)}
-  <section class="sec${featured(list).length ? '' : ' sec--surf'}"><div class="wrap">
+  ${featBlock(list, 'Featured ' + c.short, cfg)}
+  <section class="sec${list.some(isPaid) ? '' : ' sec--surf'}"><div class="wrap">
     <h2 style="font-size:1.4rem">${esc(c.short)} by city</h2><p class="lede" style="margin-bottom:1.4rem">Local pages, because a plumber in Polokwane is no use in Paarl.</p>
     <div class="linkgrid">${CITIES.map(ct => `<a href="/c/${c.slug}/${ct.slug}/"${city && ct.slug === city.slug ? ' aria-current="page" style="border-color:var(--blue)"' : ''}><span>${ct.name}</span><span class="c" data-gc-n-pair="${c.slug}|${ct.slug}">${n.pair[c.slug + '|' + ct.slug] || 0}</span></a>`).join('')}</div>
   </div></section>`;
@@ -247,60 +253,106 @@ export function city(ctx, c) {
   <p class="eyebrow">${p.name}</p><h1>Checked businesses in ${c.name}</h1><p class="lede">Businesses trading in and around ${c.name}, each with its verification record on the profile.</p>
   ${near.length ? `<div class="chips" style="margin-top:1rem"><span class="mut" style="font-size:.84rem;align-self:center">Nearby:</span>${near.map(x => `<a class="chip" href="/l/${x.slug}/">${x.name}</a>`).join('')}</div>` : ''}</div></section>
   <section class="sec"><div class="wrap">${listingGrid(list, cfg, [`No ${c.name} listings yet`, `Nothing in ${c.name} has cleared review yet. Local businesses can list free and appear here once approved.`])}</div></section>
-  ${featBlock(featured(list), 'Featured in ' + c.name)}
+  ${featBlock(list, 'Featured in ' + c.name, cfg)}
   <section class="sec sec--surf"><div class="wrap"><h2 style="font-size:1.4rem;margin-bottom:1.2rem">Categories in ${c.name}</h2>
   <div class="linkgrid">${CATS.map(k => `<a href="/c/${k.slug}/${c.slug}/"><span>${esc(k.short)}</span><span class="c" data-gc-n-pair="${k.slug}|${c.slug}">${n.pair[k.slug + '|' + c.slug] || 0}</span></a>`).join('')}</div></div></section>`;
   return layout({ title: `Checked businesses in ${c.name}`, path: `/l/${c.slug}/`, page: 'city', city: c.slug, body, desc: `Find businesses in ${c.name}, ${p.name} that were checked by a person. Verification record on every profile.`, ld: [crumbLD(it)] });
 }
 
 /* ================================================================ search */
-export function search() {
+export function search(ctx) {
   const it = [['Home', '/'], ['Search']];
+  const gold = promoGold();
   const body = `<section class="ph">${ySvg('y', 'rgba(22,82,240,.07)', 'rgba(22,82,240,.12)')}<div class="wrap">${crumbs(it)}
   <h1>Search the directory</h1><p class="lede">Filter by service, city and verification tier. Results load live from the directory database.</p>
   ${searchForm({ cls: 'search--page', id: 'gc-search-form', tier: true })}</div></section>
   <section class="sec" style="padding-top:2rem"><div class="wrap">
+  ${gold.length ? `<div class="srch-ads"><p class="eyebrow">Sponsored · Gold Verified</p><div class="feats">${gold.slice(0, 4).map(b => feat(b, ctx.cfg)).join('')}</div></div>` : ''}
   <p id="gc-count" class="mut" style="margin:0 0 1rem;font-size:.9rem"></p>
   <div id="gc-results" aria-live="polite"></div></div></section>`;
   return layout({ title: 'Search the directory', path: '/search/', body, noindex: true, desc: 'Search checked South African businesses by service, city and verification tier.' });
 }
 
-/* ================================================================ profile */
+/* ================================================================ profile
+ * What a profile shows depends on the tier:
+ *   Gold   cover image, services, photos, quote form, WhatsApp, every phone line
+ *   Blue   photos, quote form, WhatsApp
+ *   Basic  a description and contact details, and that is all                  */
+export function quoteForm(b) {
+  return `<div class="card" id="quote"><h3>Request a quote</h3><p style="font-size:.86rem">Sent straight to ${esc(b.name)} by email. We log whether they reply and publish the response rate.</p>
+  <form class="form" id="gc-quote-form" data-email="${esc(b.email || SITE.email)}" style="margin-top:1rem">
+    <input type="hidden" name="business_id" value="${esc(b.id)}">
+    <div class="f"><label for="qn">Your name</label><input id="qn" name="name" required autocomplete="name"></div>
+    <div class="f"><label for="qe">Email</label><input id="qe" name="email" type="email" required autocomplete="email"></div>
+    <div class="f"><label for="qp">Phone</label><input id="qp" name="phone" inputmode="tel" autocomplete="tel"></div>
+    <div class="f"><label for="qd">What do you need done?</label><textarea id="qd" name="details" required placeholder="Describe the job, the area and any deadline."></textarea></div>
+    <div class="ts" data-gc-turnstile="quote_request"></div>
+    <button class="btn btn-p btn-blk" type="submit">Send request</button><p id="gc-quote-status" class="msg"></p></form></div>`;
+}
+
+export const servicesHTML = services => !services || !services.length ? '' :
+  `<div class="svcs">${services.map((s, i) => `<div class="svc"><span class="svc__n">${String(i + 1).padStart(2, '0')}</span><div><b>${esc(s.name)}</b>${s.description ? `<p>${esc(s.description)}</p>` : ''}${s.price_from ? `<span class="svc__p">From ${esc(s.price_from)}</span>` : ''}</div></div>`).join('')}</div>`;
+
+const sponsoredAside = b => {
+  const g = promoGold().filter(x => x.id !== b.id).slice(0, 2);
+  return !g.length ? '' : `<div class="card adcard"><p class="eyebrow" style="margin-bottom:.6rem">Sponsored · Gold Verified</p>${g.map(x =>
+    `<a class="adcard__i" href="/b/${esc(x.slug)}/">${avatar(x)}<span><b>${esc(x.name)} ${seal('gold', 'seal--sm')}</b><small>${esc(x.tagline || x.subcategory || '')}</small></span></a>`).join('')}</div>`;
+};
+
 export function profile(ctx, b, badgeSizes) {
   const { cfg } = ctx;
+  const gold = isGold(b), paid = isPaid(b);
   const c = catBy[b.category], ct = cityBy[b.city];
   const it = [['Home', '/'], ['Categories', '/categories/']];
   if (c) it.push([c.name, `/c/${c.slug}/`]);
   if (c && ct) it.push([ct.name, `/c/${c.slug}/${ct.slug}/`]);
   it.push([b.name]);
-  const label = b.tier === 'gold' ? 'Gold Verified' : b.tier === 'blue' ? 'Blue Verified' : 'listed';
+  const label = gold ? 'Gold Verified' : isBlue(b) ? 'Blue Verified' : 'listed';
   const url = `${SITE.origin}/b/${b.slug}/`;
   const shareText = `${b.name} is ${label} on Getclient`;
   const u = encodeURIComponent(url), t = encodeURIComponent(shareText);
   const year = new Date().getFullYear();
   const since = b.founded ? `${b.founded}${year - b.founded > 0 ? ` (${year - b.founded} year${year - b.founded === 1 ? '' : 's'})` : ''}` : '';
   const verified = b.verified_at ? String(b.verified_at).slice(0, 10) : '';
-  const bimg = b.tier === 'gold' || b.tier === 'blue' ? b.tier : 'listed';
+  const bimg = paid ? b.tier : 'listed';
   const bs = badgeSizes[`${bimg}-light`] || [148, 52];
   const tel = String(b.phone || '').replace(/[^+\d]/g, '');
-  const wa = tel ? 'https://wa.me/' + tel.replace(/^\+/, '').replace(/^0/, '27') : '';
+  const wa = paid ? (b.whatsapp || (tel ? tel.replace(/^\+/, '').replace(/^0/, '27') : '')) : '';
+  const phones = gold && b.phones ? b.phones : (b.phone ? [[tel, b.phone, '']] : []);
   const snippet = `<script src="https://getclient.co.za/badge.js" data-gc-id="${b.id}" async></script>`;
+  const cover = coverOf(b, cfg);
+  const photos = gold && b.photos ? b.photos : [];
 
-  const body = `<section class="prof-h">${b.cover_photo ? `<div class="prof-h__cov"><img src="${esc(ctx.photo(b.cover_photo))}" alt=""></div>` : ySvg('prof-h__cov', 'rgba(22,82,240,.5)', 'rgba(143,176,255,.4)')}
+  const hero = gold && cover
+    ? `<section class="prof-h prof-h--gold">${ySvg('prof-h__cov', 'rgba(22,82,240,.5)', 'rgba(143,176,255,.4)')}<div class="wrap">${crumbs(it)}
+  <div class="prof-gold">
+    <div class="prof-gold__txt">
+      <div class="chips" style="margin-bottom:.8rem">${tierChip(b.tier)}<span class="tier tier--ad">Ad · Sponsored</span></div>
+      <h1>${esc(b.name)}${seal(b.tier, 'seal--lg')}</h1>
+      ${b.tagline ? `<p class="lede" style="color:#DCE6FF;margin:.2rem 0 1rem">${esc(b.tagline)}</p>` : ''}
+      <div class="prof-h__mt"><span><i class="fa-solid fa-briefcase"></i>${esc(b.subcategory || b.category_name || '')}</span><span><i class="fa-solid fa-location-dot"></i>${esc(loc(b))}</span>
+      <span class="rate" data-gc-rating="${esc(b.id)}">${rating(b.avg_rating, b.rating_count)}</span></div>
+      <div class="prof-h__acts" style="margin:1.4rem 0 0"><a class="btn btn-p" href="#quote"><i class="fa-solid fa-paper-plane"></i> Request a quote</a>${tel ? `<a class="btn btn-o" href="tel:${esc(tel)}"><i class="fa-solid fa-phone"></i> Call</a>` : ''}${wa ? `<a class="btn btn-o" href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener nofollow"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>` : ''}</div>
+    </div>
+    <div class="prof-gold__cov"><img src="${esc(cover)}" alt="${esc(b.name)}"${b.cover_fit === 'contain' ? ' class="fit-contain"' : ''}></div>
+  </div></div></section>`
+    : `<section class="prof-h">${cover ? `<div class="prof-h__cov"><img src="${esc(cover)}" alt=""></div>` : ySvg('prof-h__cov', 'rgba(22,82,240,.5)', 'rgba(143,176,255,.4)')}
 <div class="wrap">${crumbs(it)}
   <div class="prof-h__g">${avatar(b)}
-    <div><div class="chips" style="margin-bottom:.6rem">${tierChip(b.tier)}${b.sponsored ? '<span class="tier tier--ad">Ad</span>' : ''}</div>
+    <div><div class="chips" style="margin-bottom:.6rem">${tierChip(b.tier)}${gold ? '<span class="tier tier--ad">Ad · Sponsored</span>' : ''}</div>
       <h1>${esc(b.name)}${seal(b.tier, 'seal--lg')}</h1>
       <div class="prof-h__mt"><span><i class="fa-solid fa-briefcase"></i>${esc(b.subcategory || b.category_name || '')}</span><span><i class="fa-solid fa-location-dot"></i>${esc(loc(b))}</span>
       <span class="rate" data-gc-rating="${esc(b.id)}">${rating(b.avg_rating, b.rating_count)}</span></div></div>
-    <div class="prof-h__acts"><a class="btn btn-p" href="#quote"><i class="fa-solid fa-paper-plane"></i> Request a quote</a>${tel ? `<a class="btn btn-o" href="tel:${esc(tel)}"><i class="fa-solid fa-phone"></i> Call</a>` : ''}</div>
-  </div></div></section>
+    <div class="prof-h__acts">${paid ? `<a class="btn btn-p" href="#quote"><i class="fa-solid fa-paper-plane"></i> Request a quote</a>` : ''}${tel ? `<a class="btn ${paid ? 'btn-o' : 'btn-w'}" href="tel:${esc(tel)}"><i class="fa-solid fa-phone"></i> Call</a>` : ''}${!paid && b.email ? `<a class="btn btn-o" href="mailto:${esc(b.email)}"><i class="fa-solid fa-envelope"></i> Email</a>` : ''}${wa ? `<a class="btn btn-o" href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener nofollow"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>` : ''}</div>
+  </div></div></section>`;
 
+  const body = `${hero}
 <section class="sec" style="padding-top:2.6rem"><div class="wrap"><div class="profile">
   <div>
-    ${b.tagline ? `<p class="lede" style="color:var(--ink);font-weight:500;margin-bottom:1.4rem">${esc(b.tagline)}</p>` : ''}
+    ${b.tagline && !(gold && cover) ? `<p class="lede" style="color:var(--ink);font-weight:500;margin-bottom:1.4rem">${esc(b.tagline)}</p>` : ''}
     <h2>About</h2><p class="about">${esc(b.description || b.tagline || '')}</p>
-    <div id="gc-gallery" data-gc-gallery="${esc(b.id)}"></div>
+    ${gold ? `<h2>Services</h2><div data-gc-services="${esc(b.id)}">${servicesHTML(b.services) || '<p class="mut">Services are being added.</p>'}</div>` : ''}
+    ${paid ? `<div id="gc-gallery" data-gc-gallery="${esc(b.id)}"${photos.length ? ' class="gallery"' : ''}>${photos.map(p => `<a class="gallery__i" href="${esc(p)}" target="_blank" rel="noopener"><img src="${esc(p)}" alt="${esc(b.name)}" loading="lazy"${b.cover_fit === 'contain' ? ' class="fit-contain"' : ''}></a>`).join('')}</div>` : ''}
     <h2>Verification record</h2>${ledger(b)}
     <p class="mut" style="font-size:.84rem;margin-top:.8rem">${verified ? `Last verified ${verified}. ` : ''}Checks are re-run every 12 months. <a href="/verification/">What each check means</a>.</p>
     <h2>Rating</h2>
@@ -314,8 +366,8 @@ export function profile(ctx, b, badgeSizes) {
   </div>
   <aside>
     <div class="card"><h3>Contact</h3><table class="kv"><tbody>
-      ${b.phone ? `<tr><td>Phone</td><td><a href="tel:${esc(tel)}">${esc(b.phone)}</a></td></tr>` : ''}
-      ${wa ? `<tr><td>WhatsApp</td><td><a href="${esc(wa)}" target="_blank" rel="noopener nofollow">Message on WhatsApp</a></td></tr>` : ''}
+      ${phones.map(([n, show, l]) => `<tr><td>Phone${l ? ` <small class="mut">${esc(l)}</small>` : ''}</td><td><a href="tel:${esc(n)}">${esc(show)}</a></td></tr>`).join('')}
+      ${wa ? `<tr><td>WhatsApp</td><td><a href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener nofollow">Message on WhatsApp</a></td></tr>` : ''}
       ${b.email ? `<tr><td>Email</td><td><a href="mailto:${esc(b.email)}">${esc(b.email)}</a></td></tr>` : ''}
       ${b.website ? `<tr><td>Website</td><td><a href="${esc(b.website)}" rel="nofollow noopener" target="_blank">${esc(b.website.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a></td></tr>` : ''}
       <tr><td>Based in</td><td>${esc(b.address || loc(b))}</td></tr>
@@ -323,14 +375,8 @@ export function profile(ctx, b, badgeSizes) {
       ${b.employees ? `<tr><td>Team size</td><td>${esc(b.employees)}</td></tr>` : ''}
       <tr><td>Listing ID</td><td><code>${esc(b.id)}</code></td></tr></tbody></table></div>
 
-    <div class="card" id="quote"><h3>Request a quote</h3><p style="font-size:.86rem">Sent to ${esc(b.name)}. We log whether they reply and publish the response rate.</p>
-      <form class="form" id="gc-quote-form" data-email="${esc(b.email || SITE.email)}" style="margin-top:1rem">
-        <input type="hidden" name="business_id" value="${esc(b.id)}">
-        <div class="f"><label for="qn">Your name</label><input id="qn" name="name" required autocomplete="name"></div>
-        <div class="f"><label for="qe">Email</label><input id="qe" name="email" type="email" required autocomplete="email"></div>
-        <div class="f"><label for="qp">Phone</label><input id="qp" name="phone" inputmode="tel" autocomplete="tel"></div>
-        <div class="f"><label for="qd">What do you need done?</label><textarea id="qd" name="details" required placeholder="Describe the job, the area and any deadline."></textarea></div>
-        <button class="btn btn-p btn-blk" type="submit">Send request</button><p id="gc-quote-status" class="msg"></p></form></div>
+    ${paid ? quoteForm(b) : `<div class="note" style="font-size:.86rem">${esc(b.name)} has a Basic listing. Contact them directly using the details above.</div>`}
+    ${gold ? '' : sponsoredAside(b)}
 
     <div class="card"><div class="share" data-share-url="${esc(url)}" data-share-text="${esc(shareText)}"><span class="share__l">Share this business</span><div class="share__row">
       <button type="button" class="share__b share__b--native" data-share-native hidden aria-label="Share"><i class="fa-solid fa-share-nodes"></i></button>
@@ -342,10 +388,11 @@ export function profile(ctx, b, badgeSizes) {
       <button type="button" class="share__b" data-share-copy aria-label="Copy link"><i class="fa-solid fa-link"></i></button></div>
       <input class="share__u" value="${esc(url)}" readonly aria-label="Direct link to this business" onfocus="this.select()"><span class="share__msg" role="status"></span></div></div>
 
-    <div class="card own"><h3>Is this your business?</h3><p style="font-size:.86rem">Every Getclient listing displays the badge on its own website. Paste this once, anywhere in your site's code.</p>
+    <div class="card own"><h3>Is this your business?</h3><p style="font-size:.86rem">Every Getclient listing must display the badge on its own website. Paste this once, anywhere in your site's code.</p>
       <img src="/assets/badge/${bimg}-light.svg" alt="Listed on Getclient" width="${bs[0]}" height="${bs[1]}">
       <div class="codebox"><button class="btn btn-s copy" data-copy="#own-code">Copy</button><pre id="own-code">${esc(snippet)}</pre></div>
-      <p style="margin-top:.8rem;font-size:.84rem"><a href="/badge/?id=${esc(b.id)}">More badge styles, HTML and email versions →</a></p></div>
+      <p style="margin-top:.8rem;font-size:.84rem"><a href="/badge/?id=${esc(b.id)}">More badge styles, HTML and email versions →</a></p>
+      ${paid ? '' : `<p style="margin-top:.6rem;font-size:.84rem"><a href="/pricing/">Upgrade to Blue or Gold</a> to add photos, quote requests and promotion.</p>`}</div>
   </aside>
 </div></div></section>`;
 
@@ -356,8 +403,10 @@ export function profile(ctx, b, badgeSizes) {
   if (b.founded) ld.foundingDate = String(b.founded);
   if (b.website) ld.sameAs = [b.website];
   if (b.rating_count) ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: Number(b.avg_rating).toFixed(1), ratingCount: b.rating_count, bestRating: 5, worstRating: 1 };
-  if (b.cover_photo) ld.image = ctx.photo(b.cover_photo);
+  if (cover) ld.image = cover.startsWith('/') ? SITE.origin + cover : cover;
+  if (gold && b.services && b.services.length) ld.makesOffer = b.services.map(s => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.name, description: s.description || '' } }));
   return layout({ title: `${b.name} — ${b.subcategory || b.category_name || 'Business'} in ${cityName(b)}`, path: `/b/${b.slug}/`, page: 'profile', body,
+    turnstile: paid, ogImage: cover ? (cover.startsWith('/') ? SITE.origin + cover : cover) : '',
     desc: (b.tagline || b.description || `${b.name} on Getclient`).slice(0, 158), ld: [crumbLD(it), ld] });
 }
 
@@ -371,7 +420,7 @@ export function idRedirect(b) {
 }
 
 export function dynProfile() {
-  return layout({ title: 'Business profile', path: '/b/profile.html', canonical: SITE.origin + '/', noindex: true, page: 'profile',
+  return layout({ title: 'Business profile', path: '/b/profile.html', canonical: SITE.origin + '/', noindex: true, page: 'profile', turnstile: true,
     desc: 'A business profile on Getclient, South Africa’s verified business directory.',
     body: `<div id="gc-dyn-profile" data-gc-dynamic><div class="wrap" style="padding:5rem 20px"><p class="lede">Loading this listing…</p></div></div>` });
 }

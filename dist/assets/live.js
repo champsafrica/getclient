@@ -191,9 +191,10 @@
       var bimg = b.tier === 'gold' || b.tier === 'blue' ? b.tier : 'listed';
       var snippet = '<script src="https://getclient.co.za/badge.js" data-gc-id="' + b.id + '" async><\/script>';
       var loc = G.locText(b);
+      var paid = G.isPaid(b), gold = b.tier === 'gold';
 
       dyn.innerHTML =
-        '<section class="prof-h">' + (b.cover_photo ? '<div class="prof-h__cov"><img src="' + esc(photoURL(b.cover_photo)) + '" alt=""></div>' : '') +
+        '<section class="prof-h">' + (paid && b.cover_photo ? '<div class="prof-h__cov"><img src="' + esc(photoURL(b.cover_photo)) + '" alt=""></div>' : '') +
         '<div class="wrap"><nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span>' +
         '<a href="/c/' + esc(b.category) + '/">' + esc(b.category_name || '') + '</a><span aria-hidden="true">/</span><span>' + esc(b.name) + '</span></nav>' +
         '<div class="prof-h__g">' + G.avatar(b) + '<div><div class="chips" style="margin-bottom:.6rem">' + tierChip +
@@ -202,13 +203,14 @@
         '<span><i class="fa-solid fa-briefcase"></i>' + esc(b.subcategory || b.category_name || '') + '</span>' +
         '<span><i class="fa-solid fa-location-dot"></i>' + esc(loc) + '</span>' +
         '<span class="rate" data-gc-rating="' + esc(b.id) + '">' + ratingHTML(b.avg_rating, b.rating_count) + '</span></div></div>' +
-        '<div class="prof-h__acts"><a class="btn btn-p" href="#quote">Request a quote</a>' +
+        '<div class="prof-h__acts">' + (paid ? '<a class="btn btn-p" href="#quote">Request a quote</a>' : '') +
         (tel ? '<a class="btn btn-o" href="tel:' + esc(tel) + '">Call</a>' : '') + '</div></div></div></section>' +
 
         '<section class="sec" style="padding-top:2.6rem"><div class="wrap"><div class="profile"><div>' +
         (b.tagline ? '<p class="lede" style="color:var(--ink);font-weight:500;margin-bottom:1.4rem">' + esc(b.tagline) + '</p>' : '') +
         '<h2>About</h2><p class="about">' + esc(b.description || '') + '</p>' +
-        '<div id="gc-gallery" data-gc-gallery="' + esc(b.id) + '"></div>' +
+        (gold ? '<h2>Services</h2><div data-gc-services="' + esc(b.id) + '"><p class="mut">Services are being added.</p></div>' : '') +
+        (paid ? '<div id="gc-gallery" data-gc-gallery="' + esc(b.id) + '"></div>' : '') +
         '<h2>Verification record</h2>' + ledger +
         '<h2>Rating</h2><div class="rater" data-gc-rater="' + esc(b.id) + '">' +
         '<div style="margin-bottom:.6rem"><span class="rate" data-gc-rating="' + esc(b.id) + '">' + ratingHTML(b.avg_rating, b.rating_count) + '</span></div>' +
@@ -225,15 +227,16 @@
           esc(b.website.replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</a></td></tr>' : '') +
         '<tr><td>Based in</td><td>' + esc(b.address || loc) + '</td></tr>' +
         '<tr><td>Listing ID</td><td><code>' + esc(b.id) + '</code></td></tr></tbody></table></div>' +
-        '<div class="card" id="quote"><h3>Request a quote</h3>' +
+        (!paid ? '<div class="note" style="font-size:.86rem">' + esc(b.name) + ' has a Basic listing. Contact them directly using the details above.</div>' : '<div class="card" id="quote"><h3>Request a quote</h3>' +
         '<form class="form" id="gc-quote-form" data-email="' + esc(b.email) + '" style="margin-top:.8rem">' +
         '<input type="hidden" name="business_id" value="' + esc(b.id) + '">' +
         '<div class="f"><label for="qn">Your name</label><input id="qn" name="name" required></div>' +
         '<div class="f"><label for="qe">Email</label><input id="qe" name="email" type="email" required></div>' +
         '<div class="f"><label for="qp">Phone</label><input id="qp" name="phone" inputmode="tel"></div>' +
         '<div class="f"><label for="qd">What do you need done?</label><textarea id="qd" name="details" required></textarea></div>' +
+        '<div class="ts" data-gc-turnstile="quote_request"></div>' +
         '<button class="btn btn-p btn-blk" type="submit">Send request</button>' +
-        '<p id="gc-quote-status" class="msg"></p></form></div>' +
+        '<p id="gc-quote-status" class="msg"></p></form></div>') +
         '<div class="card">' + shareHTML(b) + '</div>' +
         '<div class="card own"><h3>Is this your business?</h3><p style="font-size:.86rem">Every Getclient listing displays the badge on its own website. Paste this once, anywhere in your site\'s code.</p>' +
         '<img src="/assets/badge/' + bimg + '-light.svg" alt="Listed on Getclient" height="52">' +
@@ -241,7 +244,8 @@
         '<p style="margin-top:.8rem;font-size:.84rem"><a href="/badge/?id=' + esc(b.id) + '">More badge styles →</a></p></div>' +
         '</aside></div></div></section>';
 
-      loadGallery(b.id);
+      if (paid) loadGallery(b.id);
+      if (gold) loadServices(b.id);
       wireRater();
       wireQuote();
     });
@@ -254,11 +258,11 @@
     sb.from(T('photos')).select('path,caption').eq('listing_id', id).order('sort').then(function (r) {
       if (r.error || !r.data || !r.data.length) return;
       box.className = 'gallery';
-      box.innerHTML = r.data.map(function (p, i) {
+      box.insertAdjacentHTML('beforeend', r.data.map(function (p, i) {
         return '<a class="gallery__i" href="' + esc(photoURL(p.path)) + '" target="_blank" rel="noopener">' +
           '<img src="' + esc(photoURL(p.path)) + '" alt="' + esc(p.caption || '') + '" loading="' +
           (i ? 'lazy' : 'eager') + '" width="600" height="400"></a>';
-      }).join('');
+      }).join(''));
     });
   }
   $$('[data-gc-gallery]').forEach(function (n) { loadGallery(n.getAttribute('data-gc-gallery')); });
@@ -299,21 +303,21 @@
     rater.addEventListener('mouseleave', function () { paint(mine); });
   }
 
-  function wireQuote() {
-    var f = $('#gc-quote-form');
-    if (!f || f.dataset.wired) return;
-    f.dataset.wired = '1';
-    f.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var out = $('#gc-quote-status'), data = {};
-      new FormData(f).forEach(function (v, k) { data[k] = v; });
-      out.className = 'msg'; out.textContent = 'Sending…';
-      sb.from(T('quotes')).insert(data).then(function (r) {
-        if (r.error) { out.textContent = 'That did not send. Please call them directly.'; return; }
-        f.reset(); out.textContent = 'Request sent.';
-      });
+  function wireQuote() { if (G.wireQuote) G.wireQuote($('#gc-quote-form')); }
+
+  /* Gold services from gc_services; the static page already shows the build-time list */
+  function loadServices(id) {
+    var box = $('[data-gc-services="' + id + '"]');
+    if (!box) return;
+    sb.from(T('services')).select('name,description,price_from,sort').eq('listing_id', id).order('sort').then(function (r) {
+      if (r.error || !r.data || !r.data.length) return;
+      box.innerHTML = '<div class="svcs">' + r.data.map(function (x, i) {
+        return '<div class="svc"><span class="svc__n">' + (i < 9 ? '0' : '') + (i + 1) + '</span><div><b>' + esc(x.name) + '</b>' +
+          (x.description ? '<p>' + esc(x.description) + '</p>' : '') + (x.price_from ? '<span class="svc__p">From ' + esc(x.price_from) + '</span>' : '') + '</div></div>';
+      }).join('') + '</div>';
     });
   }
+  $$('[data-gc-services]').forEach(function (n) { loadServices(n.getAttribute('data-gc-services')); });
 
   /* ============================================ 3. Paystack for paid plans */
 

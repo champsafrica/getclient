@@ -131,18 +131,19 @@
   function sealSVG(tier, cls) {
     var c = { gold: ['#B8860B', '#E0A32E'], blue: ['#1D6FF2', '#5A9BFF'] }[tier];
     if (!c) return '';
-    var pts = '', n = 12;
+    var pts = '', n = 12, gid = 'jd' + tier + (++sealSVG.n);
     for (var i = 0; i < n * 2; i++) {
       var a = (Math.PI / n) * i - Math.PI / 2, r = i % 2 === 0 ? 15.2 : 12.6;
       pts += (16 + r * Math.cos(a)).toFixed(2) + ',' + (16 + r * Math.sin(a)).toFixed(2) + ' ';
     }
     return '<svg class="seal ' + (cls || 'seal--sm') + '" viewBox="0 0 32 32" role="img" aria-label="' +
-      (tier === 'gold' ? 'Gold Verified' : 'Blue Verified') + '"><defs><linearGradient id="jd' + tier +
+      (tier === 'gold' ? 'Gold Verified' : 'Blue Verified') + '"><defs><linearGradient id="' + gid +
       '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c[1] + '"/><stop offset="1" stop-color="' +
-      c[0] + '"/></linearGradient></defs><polygon points="' + pts.trim() + '" fill="url(#jd' + tier + ')"/>' +
+      c[0] + '"/></linearGradient></defs><polygon points="' + pts.trim() + '" fill="url(#' + gid + ')"/>' +
       '<path d="M10.6 16.4l3.6 3.6 7.2-7.4" fill="none" stroke="#fff" stroke-width="2.6" ' +
       'stroke-linecap="round" stroke-linejoin="round"/></svg>';
   }
+  sealSVG.n = 0;
   window.GC.stars = starsHTML;
 
   /* a stable anonymous id, so one person rates a business once */
@@ -292,13 +293,18 @@
   function avatarHTML(b) {
     return '<span class="avatar" style="background:' + shade(b.id) + '" aria-hidden="true">' + esc(initials(b.name)) + '</span>';
   }
-  function photoURL(p) { return URL_ + '/storage/v1/object/public/gc-photos/' + p; }
+  function photoURL(p) { return /^\//.test(p) ? p : URL_ + '/storage/v1/object/public/gc-photos/' + p; }
+  // Tier rules (mirrors src/lib.mjs): only Blue and Gold show photos; Gold is always an ad.
+  function isPaid(b) { return b.tier === 'gold' || b.tier === 'blue'; }
   function listingCard(b) {
     var loc = locText(b);
-    var cov = b.cover_photo
+    var cov = isPaid(b) && b.cover_photo
       ? '<img src="' + esc(photoURL(b.cover_photo)) + '" alt="" loading="lazy" width="480" height="132">' : Y_SVG;
-    return '<article class="listing is-new" data-gc-listing="' + esc(b.id) + '"><div class="listing__cov">' + cov + '</div>' +
-      '<div class="listing__tags">' + (b.sponsored ? '<span class="tier tier--ad">Ad</span>' : '') + '</div>' +
+    var tag = b.tier === 'gold' ? '<span class="tier tier--ad">Ad · Gold</span>'
+      : b.tier === 'blue' ? '<span class="tier tier--bluetag">Blue Verified</span>' : '';
+    return '<article class="listing is-new' + (b.tier === 'gold' ? ' listing--gold' : b.tier === 'blue' ? ' listing--blue' : '') +
+      '" data-gc-listing="' + esc(b.id) + '"><div class="listing__cov">' + cov + '</div>' +
+      '<div class="listing__tags">' + tag + '</div>' +
       '<div class="listing__body">' + avatarHTML(b) +
       '<a class="listing__nm" href="/b/' + esc(b.slug) + '/">' + esc(b.name) + sealSVG(b.tier) + '</a>' +
       '<div class="listing__mt"><i class="fa-solid fa-location-dot"></i>' + esc(b.subcategory || b.category_name || '') +
@@ -308,9 +314,40 @@
       ratingHTML(b.avg_rating, b.rating_count) + '</span>' +
       '<span class="listing__go">View <i class="fa-solid fa-arrow-right"></i></span></div></div></article>';
   }
+  /* ---- edge functions and Turnstile ---- */
+  // Calls a Supabase edge function. status 404 means it is not deployed yet.
+  function callFn(name, body) {
+    return fetch(URL_ + '/functions/v1/' + name, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: KEY, Authorization: 'Bearer ' + KEY },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d || {} }; });
+    }).catch(function () { return { status: 0, data: {} }; });
+  }
+  // Explicitly rendered Turnstile widget; the token is single use, so reset after every attempt.
+  var TS_KEY = CFG.turnstileSiteKey || '';
+  function turnstileFor(el) {
+    var id = null, action = el.getAttribute('data-gc-turnstile');
+    function render() {
+      if (id !== null || !TS_KEY || !window.turnstile) return;
+      id = window.turnstile.render(el, { sitekey: TS_KEY, action: action, theme: 'light' });
+    }
+    if (window.turnstile) render();
+    else {
+      var tries = 0, t = setInterval(function () {
+        if (window.turnstile || ++tries > 60) { clearInterval(t); render(); }
+      }, 250);
+    }
+    return {
+      token: function () { return id !== null && window.turnstile ? window.turnstile.getResponse(id) || '' : ''; },
+      reset: function () { if (id !== null && window.turnstile) window.turnstile.reset(id); }
+    };
+  }
+
   Object.assign(window.GC, {
     card: listingCard, seal: sealSVG, rating: ratingHTML, avatar: avatarHTML, provName: provName,
-    locText: locText, photoURL: photoURL, ySvg: Y_SVG
+    locText: locText, photoURL: photoURL, ySvg: Y_SVG, fn: callFn, turnstile: turnstileFor, isPaid: isPaid
   });
 
   /* ================================================== scroll reveal */
@@ -407,6 +444,68 @@
       return el ? el.value : 'basic';
     }
 
+    // Show only what the chosen tier may add: photos for Blue and Gold, services for Gold.
+    function applyPlan() {
+      var p = plan();
+      $$('[data-plan-only]', listForm).forEach(function (n) {
+        n.hidden = n.getAttribute('data-plan-only').split(' ').indexOf(p) === -1;
+      });
+      if (p === 'basic' && $('#bphotos')) { $('#bphotos').value = ''; $('#gc-photo-preview').innerHTML = ''; }
+      if (p === 'gold' && !$$('.svc-row', listForm).length) addService();
+    }
+
+    /* ---- Gold services ---- */
+    var svcBox = $('#gc-services');
+    function addService() {
+      if (!svcBox || $$('.svc-row', svcBox).length >= 12) return;
+      var row = document.createElement('div');
+      row.className = 'svc-row';
+      row.innerHTML = '<input placeholder="Service, e.g. Website design" maxlength="80" data-svc="name">' +
+        '<input placeholder="One line about it (optional)" maxlength="280" data-svc="description">' +
+        '<button type="button" class="btn btn-g btn-s" aria-label="Remove service">&times;</button>';
+      $('button', row).addEventListener('click', function () { row.remove(); });
+      svcBox.appendChild(row);
+    }
+    if ($('#gc-add-service')) $('#gc-add-service').addEventListener('click', addService);
+    function services() {
+      return $$('.svc-row', svcBox || document.createElement('div')).map(function (r) {
+        return { name: $('[data-svc=name]', r).value.trim(), description: $('[data-svc=description]', r).value.trim() };
+      }).filter(function (s) { return s.name.length >= 2; });
+    }
+
+    /* ---- the badge must be on the applicant's website before they continue ---- */
+    var badge = { ok: false, unavailable: false, url: '' };
+    var badgeBtn = $('#gc-badge-check'), badgeMsg = $('#gc-badge-msg'), badgeUrl = $('#gc-badge-url');
+    if (badgeBtn) badgeBtn.addEventListener('click', function () {
+      var u = (badgeUrl.value || '').trim();
+      if (!u) { badgeMsg.className = 'msg err'; badgeMsg.textContent = 'Enter the address of the page where you added the badge.'; return; }
+      badgeBtn.disabled = true;
+      badgeMsg.className = 'msg'; badgeMsg.textContent = 'Checking ' + u + '…';
+      callFn('check-badge', { url: u }).then(function (r) {
+        badgeBtn.disabled = false;
+        badge.url = u;
+        if (r.status === 404 || r.status === 0) {
+          // The checker is not deployed yet. The reviewer checks by hand before approval instead.
+          badge.unavailable = true;
+          badgeMsg.className = 'msg';
+          badgeMsg.textContent = 'We could not run the automatic check right now. A reviewer will check your website before approval, so make sure the badge is live.';
+          return;
+        }
+        badge.ok = !!r.data.found;
+        badgeMsg.className = 'msg ' + (badge.ok ? 'ok' : 'err');
+        badgeMsg.textContent = badge.ok ? 'Badge found. Thank you, you can continue.'
+          : (r.data.error || 'The badge was not found on that page.') + ' Publish the code above, then check again.';
+      });
+    });
+
+    // /list/?ref=gc-123456 arrives from a rejection email
+    var ref = new URLSearchParams(location.search).get('ref');
+    if (ref && $('#gc-resubmit')) {
+      $('#gc-resubmit').hidden = false;
+      $('#gc-resubmit').textContent = 'You are resubmitting application ' + ref.replace(/[^a-z0-9-]/gi, '') +
+        '. Fix the issue described in our email, then complete the steps again.';
+    }
+
     function goto(n) {
       step = n;
       $$('.step-pane', listForm).forEach(function (p) {
@@ -472,7 +571,7 @@
         var missing = [];
         [['name', 'business name'], ['category', 'category'], ['description', 'description'],
          ['city', 'city'], ['province', 'province'], ['founded', 'year established'],
-         ['phone', 'phone'], ['email', 'email'], ['contact_name', 'contact person']].forEach(function (f) {
+         ['phone', 'phone'], ['email', 'email'], ['website', 'website'], ['contact_name', 'contact person']].forEach(function (f) {
           var el = listForm.querySelector('[name=' + f[0] + ']');
           if (el && !String(el.value || '').trim()) missing.push(f[1]);
         });
@@ -483,7 +582,12 @@
         }
         if (missing.length) { alert('Still needed: ' + missing.join(', ') + '.'); return false; }
       }
-      if (n === 3) {
+      if (n === 3 && !badge.ok && !badge.unavailable) {
+        alert('Add the Listed on Getclient badge to your website and press "Check my website" before continuing. ' +
+              'Every listing must carry the badge.');
+        return false;
+      }
+      if (n === 4) {
         var need = NEEDED[plan()];
         var absent = need.filter(function (k) { return !picked[k]; });
         if (absent.length) {
@@ -541,7 +645,7 @@
       if (p === 'basic') {
         rows = '<div class="sum-row"><span>Listing</span><b>Free</b></div>';
       } else {
-        rows = '<div class="sum-row"><span>' + name + ', first month</span><span>' + money(priced.base) + '</span></div>';
+        rows = '<div class="sum-row"><span>' + name + ', 12 months</span><span>' + money(priced.base) + '</span></div>';
         if (priced.discount_pct) {
           rows += '<div class="sum-row sum-row--off"><span>Discount ' + esc(priced.code) + ' (' +
             priced.discount_pct + '% off)</span><span>− ' + money(priced.base - priced.amount) + '</span></div>';
@@ -605,15 +709,19 @@
       if (nx) {
         var to = Number(nx.getAttribute('data-next'));
         if (!validate(to - 1)) return;
-        if (to === 3) buildDocs();
-        if (to === 4) buildSummary();
+        if (to === 3 && badgeUrl && !badgeUrl.value) badgeUrl.value = listForm.querySelector('[name=website]').value.trim();
+        if (to === 4) buildDocs();
+        if (to === 5) buildSummary();
         goto(to);
       }
       if (bk) goto(Number(bk.getAttribute('data-back')));
     });
     $$('[name=requested_plan]', listForm).forEach(function (r) {
-      r.addEventListener('change', function () { picked = {}; buildDocs(); });
+      r.addEventListener('change', function () { picked = {}; buildDocs(); applyPlan(); });
     });
+    // a new website address means the badge has to be checked again
+    listForm.querySelector('[name=website]').addEventListener('change', function () { badge.ok = false; if (badgeUrl) badgeUrl.value = ''; });
+    var listTs = $('[data-gc-turnstile]', listForm) ? turnstileFor($('[data-gc-turnstile]', listForm)) : null;
 
     /* ---- submit ---- */
     listForm.addEventListener('submit', function (e) {
@@ -644,7 +752,14 @@
         return;
       }
 
-      var files = ($('#bphotos') && $('#bphotos').files) ? Array.prototype.slice.call($('#bphotos').files, 0, 6) : [];
+      var token = listTs ? listTs.token() : '';
+      if (TS_KEY && !token) {
+        out.className = 'msg note note--w';
+        out.textContent = 'Please complete the security check above the Submit button.';
+        return;
+      }
+      var cap = thePlan === 'gold' ? 20 : thePlan === 'blue' ? 6 : 0;
+      var files = (cap && $('#bphotos') && $('#bphotos').files) ? Array.prototype.slice.call($('#bphotos').files, 0, cap) : [];
       btn.disabled = true;
       out.className = 'msg note';
 
@@ -689,7 +804,19 @@
         // One controlled entry point. It whitelists fields server-side and returns
         // the new public_id, which a plain insert cannot do without exposing
         // pending rows to a SELECT policy.
-        return sb.rpc('gc_submit_listing', { p: data }).then(function (r) {
+        // submit-listing checks Turnstile and the badge on the server, then sends the
+        // welcome email. Before it is deployed, fall back to the database function.
+        return callFn('submit-listing', { p: data, token: token, services: thePlan === 'gold' ? services() : [], payment_reference: reference })
+          .then(function (f) {
+            if (f.status === 404 || f.status === 0) return sb.rpc('gc_submit_listing', { p: data });
+            if (listTs) listTs.reset();
+            if (f.status === 200 && f.data.public_id) {
+              badge.ok = badge.ok || !!f.data.badge_found;
+              return { data: [{ public_id: f.data.public_id }] };
+            }
+            if (f.data.error === 'badge_missing') goto(3);
+            return { error: { message: f.data.message || 'the server could not be reached' } };
+          }).then(function (r) {
           if (!r.error && (!r.data || !r.data.length)) {
             r = { error: { message: 'The submission did not come back with a listing ID.' } };
           }
@@ -739,6 +866,7 @@
         var more = $('#gc-done-more');
         if (more) more.href = '/badge/?id=' + encodeURIComponent(listing.public_id);
         if (paid) { var pd = $('#gc-done-paid'); if (pd) pd.hidden = false; }
+        if (!badge.ok) { var nb = $('#gc-done-nobadge'); if (nb) nb.hidden = false; }
         done.hidden = false;
         done.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
@@ -781,7 +909,7 @@
       photoIn.addEventListener('change', function () {
         var box = $('#gc-photo-preview');
         box.innerHTML = '';
-        Array.prototype.slice.call(photoIn.files, 0, 6).forEach(function (f) {
+        Array.prototype.slice.call(photoIn.files, 0, plan() === "gold" ? 20 : 6).forEach(function (f) {
           var img = document.createElement('img');
           img.src = URL.createObjectURL(f);
           img.alt = '';
@@ -792,34 +920,53 @@
     }
 
     buildDocs();
+    applyPlan();
   }
 
   /* ================================================== quote requests */
-  var quoteForm = $('#gc-quote-form');
-  if (quoteForm) {
+  // Quote requests go through submit-quote: Turnstile is checked on the server and
+  // the request is emailed to the business owner, with hello@digitalxagency.io copied.
+  function wireQuote(quoteForm) {
+    if (!quoteForm || quoteForm.dataset.wired) return;
+    quoteForm.dataset.wired = '1';
+    var tsEl = $('[data-gc-turnstile]', quoteForm), ts = tsEl ? turnstileFor(tsEl) : null;
     quoteForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      var out = $('#gc-quote-status'), data = {};
-      new FormData(quoteForm).forEach(function (v, k) { data[k] = v; });
+      var out = $('#gc-quote-status', quoteForm), data = {};
+      new FormData(quoteForm).forEach(function (v, k) { if (k !== 'cf-turnstile-response') data[k] = v; });
       if (!LIVE) {
         location.href = 'mailto:' + (quoteForm.getAttribute('data-email') || 'hello@digitalxagency.io') +
-          '?subject=' + encodeURIComponent('Quote request via Getclient') +
+          '?cc=hello@digitalxagency.io&subject=' + encodeURIComponent('Quote request via Getclient') +
           '&body=' + encodeURIComponent(Object.keys(data).map(function (k) { return k + ': ' + data[k]; }).join('\n'));
         return;
       }
-      out.className = 'msg note'; out.textContent = 'Sending your request…';
-      sb.from(T('quotes')).insert(data).then(function (r) {
-        if (r.error) {
-          out.className = 'msg note note--w';
-          out.textContent = 'That did not send. Use the phone number above, or WhatsApp us on 021 879 3035.';
+      var token = ts ? ts.token() : '';
+      if (TS_KEY && !token) { out.className = 'msg err'; out.textContent = 'Please complete the security check first.'; return; }
+      var btn = $('button[type=submit]', quoteForm);
+      btn.disabled = true;
+      out.className = 'msg'; out.textContent = 'Sending your request…';
+      data.token = token;
+      callFn('submit-quote', data).then(function (f) {
+        if (f.status !== 404 && f.status !== 0) return f;
+        // not deployed yet: save the request directly, as before
+        delete data.token;
+        return sb.from(T('quotes')).insert(data).then(function (r) { return { status: r.error ? 500 : 200, data: {} }; });
+      }).then(function (f) {
+        btn.disabled = false;
+        if (ts) ts.reset();
+        if (f.status !== 200) {
+          out.className = 'msg err';
+          out.textContent = (f.data && f.data.message) || 'That did not send. Use the phone number above, or WhatsApp us on 021 879 3035.';
           return;
         }
         quoteForm.reset();
-        out.className = 'msg note';
-        out.textContent = 'Request sent. Getclient tracks whether the business replies.';
+        out.className = 'msg ok';
+        out.textContent = 'Request sent to the business by email. Getclient tracks whether they reply.';
       });
     });
   }
+  window.GC.wireQuote = wireQuote;
+  wireQuote($('#gc-quote-form'));
 
   /* ================================================== badge builder */
   var bb = $('#gc-badge-builder');
@@ -919,264 +1066,7 @@
     }
   }
 
-  /* ================================================== admin queue */
-  var admin = $('#gc-admin');
-  if (admin) {
-    var queue = $('#gc-queue'), loginBox = $('#gc-login');
-    var CHECKS = [
-      ['check_identity', 'Identity'], ['check_cipc', 'CIPC registration'],
-      ['check_insurance', 'Insurance'], ['check_trading_history', 'Trading history'],
-      ['check_reviews', 'Client ratings']
-    ];
-    // A tier may only be set once the checks behind it are actually ticked.
-    // This is the whole product promise, so the panel enforces it rather than
-    // trusting whoever is clicking.
-    var REQUIRED = {
-      none: [],
-      blue: ['check_identity', 'check_cipc'],
-      gold: ['check_identity', 'check_cipc', 'check_insurance', 'check_trading_history', 'check_reviews']
-    };
-
-    function show(v) { loginBox.hidden = v === 'queue'; $('#gc-admin-main').hidden = v !== 'queue'; }
-
-    $('#gc-login-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      var m = $('#gc-login-msg');
-      if (!LIVE) { m.textContent = 'Connect Supabase in config.js first.'; return; }
-      m.textContent = 'Signing in…';
-      sb.auth.signInWithPassword({ email: $('#gc-email').value, password: $('#gc-password').value })
-        .then(function (r) {
-          if (r.error) { m.textContent = 'Those credentials did not work.'; return; }
-          show('queue'); load('pending');
-        });
-    });
-
-    function tierBadge(t) {
-      return '<span class="tier tier--' + (t || 'none') + '">' +
-        (t === 'gold' ? 'Gold Verified' : t === 'blue' ? 'Blue Verified' : 'Basic') + '</span>';
-    }
-
-    // Documents are in a private bucket, so each link is a short-lived signed URL
-    // minted on demand for the signed-in reviewer. Nothing is ever public.
-    function docsBlock(x) {
-      if (!x.requested_plan || x.requested_plan === 'basic') return '';
-      return '<details class="verify" data-docs="' + esc(x.public_id) + '">' +
-        '<summary>Documents' + (x.docs_complete ? ' ✓' : ' — incomplete') + '</summary>' +
-        '<div class="verify__body"><p class="lede" style="font-size:.82rem">Loading…</p></div></details>';
-    }
-
-    function openDocs(det) {
-      var pid = det.getAttribute('data-docs');
-      var body = $('.verify__body', det);
-      if (det.dataset.loaded) return;
-      det.dataset.loaded = '1';
-      sb.from(T('documents')).select('kind,path,filename,uploaded_at').eq('listing_id', pid)
-        .is('deleted_at', null).then(function (r) {
-          if (r.error || !r.data || !r.data.length) {
-            body.innerHTML = '<p style="font-size:.84rem;color:var(--err);margin:0">No documents uploaded. ' +
-              'Do not issue a badge for this listing.</p>';
-            return;
-          }
-          Promise.all(r.data.map(function (d) {
-            return sb.storage.from('gc-docs').createSignedUrl(d.path, 600).then(function (u) {
-              return { d: d, url: (u.data && u.data.signedUrl) || null };
-            });
-          })).then(function (items) {
-            body.innerHTML = items.map(function (it) {
-              var label = { cipc: 'CIPC document', id: 'ID / passport', sars: 'SARS clearance',
-                            insurance: 'Insurance certificate' }[it.d.kind] || it.d.kind;
-              return '<div class="doc" style="margin-bottom:.4rem">' +
-                '<span class="doc__i">📄</span><span class="doc__t"><b>' + label + '</b><span>' +
-                esc(it.d.filename || '') + '</span></span>' +
-                (it.url ? '<a class="btn btn-g btn-s" href="' + it.url + '" target="_blank" rel="noopener">Open</a>'
-                        : '<span class="doc__s" style="color:var(--err)">link failed</span>') + '</div>';
-            }).join('') +
-            '<p style="font-size:.72rem;color:var(--mut2);margin:.5rem 0 0">Links expire in 10 minutes. ' +
-            'Delete documents once the check is recorded — POPIA retention is 90 days.</p>' +
-            '<button class="btn btn-g btn-s" data-purge="' + esc(pid) + '" style="margin-top:.5rem">' +
-            'Delete documents</button>';
-          });
-        });
-    }
-
-    function rowHTML(x, status) {
-      var checks = CHECKS.map(function (c) {
-        return '<label class="chk" style="font-size:.82rem"><input type="checkbox" data-ck="' + c[0] +
-          '"' + (x[c[0]] ? ' checked' : '') + '><span>' + c[1] + '</span></label>';
-      }).join('');
-
-      var verify = status === 'approved'
-        ? '<details class="verify"><summary>Set verification tier</summary>' +
-            '<div class="verify__body" data-vid="' + x.id + '">' +
-            '<div class="verify__checks">' + checks + '</div>' +
-            '<div class="verify__foot">' +
-            '<label style="font-size:.78rem;font-weight:600;color:var(--mut)">Tier' +
-            '<select data-tier style="margin-left:.5rem">' +
-            ['none', 'blue', 'gold'].map(function (t) {
-              return '<option value="' + t + '"' + (x.tier === t ? ' selected' : '') + '>' +
-                (t === 'none' ? 'Basic (no badge)' : t === 'blue' ? 'Blue Verified' : 'Gold Verified') + '</option>';
-            }).join('') + '</select></label>' +
-            '<button class="btn btn-p btn-s" data-save="' + x.id + '">Save verification</button>' +
-            '<span class="verify__msg"></span></div>' +
-            '<p style="font-size:.74rem;color:var(--mut2);margin:.6rem 0 0">' +
-            'Blue needs identity + CIPC. Gold needs all five. Saving stamps today\'s date and the badge ' +
-            'goes live on the listing and on their website within minutes.</p>' +
-            '</div></details>'
-        : '';
-
-      var actions = status === 'pending'
-        ? '<button class="btn btn-p btn-s" data-act="approved" data-id="' + x.id + '">Approve</button> ' +
-          '<button class="btn btn-g btn-s" data-act="rejected" data-id="' + x.id + '">Reject</button>'
-        : status === 'approved'
-          ? '<a class="btn btn-g btn-s" href="/b/' + esc(x.slug || '') + '/" target="_blank">View</a> ' +
-            '<button class="btn btn-g btn-s" data-act="suspended" data-id="' + x.id + '">Suspend</button>'
-          : '<button class="btn btn-p btn-s" data-act="approved" data-id="' + x.id + '">Approve</button>';
-
-      return '<tr><td><strong>' + esc(x.name) + '</strong> ' + tierBadge(x.tier) +
-        '<br><span class="listing__mt">' + esc(x.email || '') + ' · ' + esc(x.phone || '') + '</span>' +
-        '<br><span class="listing__mt">CIPC: ' + esc(x.cipc || '—') + ' · ID: ' + esc(x.public_id || '') + '</span>' +
-        docsBlock(x) + verify + '</td>' +
-        '<td>' + esc(x.category || '') + '</td><td>' + esc(x.city || '') + '</td>' +
-        '<td>' + esc(x.requested_plan || 'basic') +
-        (x.paid_plan ? '<br><span class="listing__mt" style="color:var(--grn)">paid: ' + esc(x.paid_plan) + '</span>' : '') +
-        '</td><td>' + new Date(x.created_at).toLocaleDateString('en-ZA') + '</td>' +
-        '<td>' + actions + '</td></tr>';
-    }
-
-    function load(status) {
-      queue.innerHTML = '<p class="lede">Loading…</p>';
-      sb.from(T('listings')).select('*').eq('status', status).order('created_at', { ascending: false })
-        .then(function (r) {
-          if (r.error) {
-            queue.innerHTML = '<div class="empty"><h3>Could not load the queue</h3>' +
-              '<p>Your session may have expired, or this account is not in gc_admins.</p></div>';
-            return;
-          }
-          var rows = r.data || [];
-          if (!rows.length) {
-            queue.innerHTML = '<div class="empty"><h3>Nothing here</h3><p>No ' + status + ' listings right now.</p></div>';
-            return;
-          }
-          queue.innerHTML = '<div class="scroller"><table class="table"><thead><tr><th>Business</th>' +
-            '<th>Category</th><th>City</th><th>Plan</th><th>Added</th><th>Action</th></tr></thead><tbody>' +
-            rows.map(function (x) { return rowHTML(x, status); }).join('') + '</tbody></table></div>';
-        });
-    }
-
-    admin.addEventListener('click', function (e) {
-      var tab = e.target.closest('[data-status]');
-      if (tab) {
-        $$('[data-status]').forEach(function (t) { t.classList.remove('on'); });
-        tab.classList.add('on'); load(tab.getAttribute('data-status')); return;
-      }
-
-      // ---- save verification tier + checks ----
-      var save = e.target.closest('[data-save]');
-      if (save) {
-        var body = save.closest('.verify__body');
-        var out = $('.verify__msg', body);
-        var patch = {}, ticked = [];
-        $$('[data-ck]', body).forEach(function (cb) {
-          patch[cb.getAttribute('data-ck')] = cb.checked;
-          if (cb.checked) ticked.push(cb.getAttribute('data-ck'));
-        });
-        var tier = $('[data-tier]', body).value;
-        var missing = (REQUIRED[tier] || []).filter(function (k) { return ticked.indexOf(k) === -1; });
-        if (missing.length) {
-          out.className = 'verify__msg err';
-          out.textContent = tier.toUpperCase() + ' needs: ' + missing.map(function (k) {
-            return (CHECKS.filter(function (c) { return c[0] === k; })[0] || [, k])[1];
-          }).join(', ');
-          return;
-        }
-        patch.tier = tier;
-        patch.verified_at = tier === 'none' ? null : new Date().toISOString();
-        save.disabled = true;
-        out.className = 'verify__msg';
-        out.textContent = 'Saving…';
-        sb.from(T('listings')).update(patch).eq('id', save.getAttribute('data-save')).then(function (r) {
-          save.disabled = false;
-          if (r.error) {
-            out.className = 'verify__msg err';
-            out.textContent = 'Did not save: ' + (r.error.message || 'unknown error');
-            return;
-          }
-          out.className = 'verify__msg ok';
-          out.textContent = tier === 'none'
-            ? 'Badge set to Listed. Their website badge shows Listed on Getclient within the hour.'
-            : (tier === 'gold' ? 'Gold' : 'Blue') + ' Verified saved and live.';
-          var badge = body.closest('td').querySelector('.tier');
-          if (badge) {
-            badge.className = 'tier tier--' + tier;
-            badge.textContent = tier === 'gold' ? 'Gold Verified' : tier === 'blue' ? 'Blue Verified' : 'Basic';
-          }
-        });
-        return;
-      }
-
-      // ---- approve straight to the tier they paid for ----
-      var issue = e.target.closest('[data-issue]');
-      if (issue) {
-        var tier = issue.getAttribute('data-tier');
-        var det = issue.closest('tr').querySelector('[data-docs]');
-        if (!det || !det.dataset.loaded) {
-          alert('Open the Documents panel and check every document before issuing a badge.');
-          if (det) { det.open = true; openDocs(det); }
-          return;
-        }
-        if (!confirm('Issue ' + tier.toUpperCase() + ' Verified?\n\nOnly continue if you have opened every ' +
-                     'document and confirmed the CIPC number on the register. This badge is a public claim.')) return;
-        var patch = {
-          status: 'approved', reviewed_at: new Date().toISOString(), tier: tier,
-          check_identity: true, check_cipc: true, verified_at: new Date().toISOString()
-        };
-        if (tier === 'gold') {
-          patch.check_insurance = true;
-          patch.check_trading_history = true;
-        }
-        issue.disabled = true;
-        sb.from(T('listings')).update(patch).eq('id', issue.getAttribute('data-issue')).then(function (r) {
-          if (r.error) { issue.disabled = false; alert('Could not save: ' + r.error.message); return; }
-          issue.closest('tr').remove();
-        });
-        return;
-      }
-
-      // ---- purge documents after verification ----
-      var purge = e.target.closest('[data-purge]');
-      if (purge) {
-        if (!confirm('Permanently delete the uploaded documents for this listing?')) return;
-        var pid2 = purge.getAttribute('data-purge');
-        purge.disabled = true;
-        sb.from(T('documents')).select('path').eq('listing_id', pid2).then(function (r) {
-          var paths = (r.data || []).map(function (d) { return d.path; });
-          return sb.storage.from('gc-docs').remove(paths).then(function () {
-            return sb.from(T('documents')).update({ deleted_at: new Date().toISOString() }).eq('listing_id', pid2);
-          });
-        }).then(function () { purge.textContent = 'Documents deleted'; });
-        return;
-      }
-
-      var act = e.target.closest('[data-act]');
-      if (!act) return;
-      act.disabled = true;
-      sb.from(T('listings')).update({
-        status: act.getAttribute('data-act'), reviewed_at: new Date().toISOString()
-      }).eq('id', act.getAttribute('data-id'))
-        .then(function (r) { r.error ? (act.disabled = false) : act.closest('tr').remove(); });
-    });
-
-    admin.addEventListener('toggle', function (e) {
-      var det = e.target.closest ? e.target.closest('[data-docs]') : null;
-      if (det && det.open) openDocs(det);
-    }, true);
-
-    if (LIVE) {
-      sb.auth.getSession().then(function (r) {
-        r.data && r.data.session ? (show('queue'), load('pending')) : show('login');
-      });
-    } else { show('login'); }
-  }
+  /* reviewer panel: see assets/admin.js */
 
   /* ================================================== PWA */
   if ('serviceWorker' in navigator) {

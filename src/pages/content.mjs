@@ -1,5 +1,5 @@
 import { esc, layout, crumbs, crumbLD, seal, ySvg, SITE, CATS, CITIES } from '../lib.mjs';
-import { PROVINCES } from '../data/site.mjs';
+import { PROVINCES, TIERS } from '../data/site.mjs';
 import { ledger } from './directory.mjs';
 
 const ph = (it, eyebrow, h1, lede) => `<section class="ph">${ySvg('y', 'rgba(22,82,240,.07)', 'rgba(22,82,240,.12)')}<div class="wrap">${crumbs(it)}
@@ -9,23 +9,29 @@ const cards = (items, cols = 'g2') => `<div class="grid ${cols}">${items.map(([h
 const ALL = { blue: { gold: 1, blue: 1 } };
 
 /* ================================================================ list */
+// The Getclient badge is shown at every stage of the application, and the
+// badge has to be found on the applicant's website before they can continue.
+const stageBadge = (note) => `<div class="stagebadge"><img src="/assets/badge/listed-light.svg" alt="Listed on Getclient" width="148" height="52"><span>${note}</span></div>`;
+const UNIVERSAL = '<script src="https://getclient.co.za/badge.js" async></script>';
+
 export function list() {
   const it = [['Home', '/'], ['List your business']];
   const pick = (v, label, price, per, d, docs, checked) => `<label class="pick"><input type="radio" name="requested_plan" value="${v}"${checked ? ' checked' : ''}>
   <span class="pick__b"><span>${v === 'basic' ? '<span class="tier tier--none">Basic</span>' : `<span class="tier tier--${v}">${seal(v)} ${label}</span>`}</span>
   <span class="pick__p">${price}<small>${per}</small></span><span class="pick__d">${d}</span>
   <span class="pick__r"><strong>Documents required:</strong> ${docs}</span></span></label>`;
-  const body = `${ph(it, 'For businesses', 'List your business', 'Four steps. A person reads every submission, and for Blue or Gold we check the documents you upload before you are asked to pay.')}
-<section class="sec" style="padding-top:2.6rem"><div class="wrap" style="max-width:880px">
-  <ol class="steps-bar" id="gc-steps"><li data-step="1" class="on"><span>1</span> Choose your tier</li><li data-step="2"><span>2</span> Business details</li><li data-step="3"><span>3</span> Documents</li><li data-step="4"><span>4</span> Confirm</li></ol>
+  const body = `${ph(it, 'For businesses', 'List your business', 'Five steps. Every listing displays the Listed on Getclient badge on its own website, and a person reads every submission before it goes live.')}
+<section class="sec" style="padding-top:2.6rem"><div class="wrap" style="max-width:900px">
+  <div class="note" id="gc-resubmit" hidden style="margin-bottom:1.2rem"></div>
+  <ol class="steps-bar steps-bar--5" id="gc-steps"><li data-step="1" class="on"><span>1</span> Tier</li><li data-step="2"><span>2</span> Details</li><li data-step="3"><span>3</span> Badge</li><li data-step="4"><span>4</span> Documents</li><li data-step="5"><span>5</span> Confirm</li></ol>
 
   <div id="gc-list-done" hidden class="card" style="padding:2.2rem;border-color:var(--ok)">
-    <div style="text-align:center">${seal('blue', 'seal--lg')}<h2 style="margin:.8rem 0 .5rem">Submission received</h2>
-    <p class="lede" style="margin-inline:auto">Your listing ID is <code id="gc-done-id">—</code>. Keep it, it is what your website badge uses. Digitalx has been notified and will review your listing within one to two business days.</p>
-    <p id="gc-done-paid" hidden class="note note--ok" style="text-align:left">Payment received. Your badge is issued as soon as a reviewer confirms the documents.</p></div>
-    <div class="done-badge"><h3>Next: add the badge to your website</h3>
-      <p class="mut" style="font-size:.92rem">Every Getclient listing shows the <b>Listed on Getclient</b> badge on its own website. Paste this code once, anywhere in your site. It starts showing as soon as your listing is approved, and it links visitors to your profile here.</p>
-      <div class="stage" style="min-height:0;padding:1.4rem"><img src="/assets/badge/listed-light.svg" alt="Listed on Getclient" width="148" height="52"></div>
+    <div style="text-align:center"><img src="/assets/badge/listed-light.svg" alt="Listed on Getclient" width="148" height="52"><h2 style="margin:.8rem 0 .5rem">Submission received</h2>
+    <p class="lede" style="margin-inline:auto">Your listing ID is <code id="gc-done-id">—</code>. We have emailed you a welcome message with your badge code. A person will review your listing within one to two business days.</p>
+    <p id="gc-done-paid" hidden class="note note--ok" style="text-align:left">Payment received. Your badge is issued as soon as a reviewer confirms the documents.</p>
+    <p id="gc-done-nobadge" hidden class="note note--w" style="text-align:left">We could not find the badge on your website yet. Your listing will not be approved until it is there.</p></div>
+    <div class="done-badge"><h3>Keep this badge on your website</h3>
+      <p class="mut" style="font-size:.92rem">You can keep the code you already added. This version is tied to your listing ID and shows your tier once you are approved:</p>
       <div class="codebox" style="margin-top:1rem"><button type="button" class="btn btn-s copy" data-copy="#gc-done-code">Copy</button><pre id="gc-done-code"></pre></div>
       <p style="margin-top:1rem;font-size:.88rem"><a href="#" id="gc-done-more">Other styles, plain HTML and email signature versions →</a></p></div>
     <p style="text-align:center;margin:1.4rem 0 0"><a class="btn btn-g" href="/">Back to the directory</a></p>
@@ -33,17 +39,19 @@ export function list() {
 
   <form class="form" id="gc-list-form" novalidate>
     <div class="step-pane" data-pane="1">
+      ${stageBadge('Every tier carries the Getclient badge on its website. It is free and required.')}
       <h2 style="font-size:1.3rem;margin-bottom:.3rem">Which tier are you applying for?</h2>
-      <p class="lede" style="margin-bottom:1.3rem">You can start on Basic and upgrade later. Paid tiers are only charged after your documents are uploaded.</p>
+      <p class="lede" style="margin-bottom:1.3rem">Start on Basic and upgrade later if you like. Paid tiers are billed once a year, only after your documents and badge are checked. <a href="/pricing/#compare">Compare tiers</a>.</p>
       <div class="picks">
-        ${pick('basic', 'Basic', 'R0', 'free forever', 'Get on the map. The Listed on Getclient badge, no card required.', 'No documents needed', true)}
-        ${pick('blue', 'Blue Verified', SITE.prices.blue, 'per month, cancel anytime', 'Identity and CIPC confirmed. Blue badge on your listing and your own site.', 'CIPC document + ID or passport')}
-        ${pick('gold', 'Gold Verified', SITE.prices.gold, 'per month, cancel anytime', 'The full check, plus automatic ad placement across the directory.', 'CIPC, ID or passport, SARS tax clearance, insurance certificate')}
+        ${pick('basic', 'Basic', 'R0', 'free forever', 'A description of your business and your contact details.', 'No documents needed', true)}
+        ${pick('blue', 'Blue Verified', SITE.prices.blue, SITE.period, 'Identity and CIPC confirmed. Photos, quote requests and the Blue Verified showcase on every page.', 'CIPC document + ID or passport')}
+        ${pick('gold', 'Gold Verified', SITE.prices.gold, SITE.period, 'The full check. Ads on every page, your services, photos and a cover image.', 'CIPC, ID or passport, SARS tax clearance, insurance certificate')}
       </div>
       <div class="pane-nav"><button type="button" class="btn btn-p" data-next="2">Continue <i class="fa-solid fa-arrow-right"></i></button></div>
     </div>
 
     <div class="step-pane" data-pane="2" hidden>
+      ${stageBadge('Your listing will carry the Listed on Getclient badge.')}
       <h2 style="font-size:1.3rem;margin-bottom:1rem">Business details</h2>
       <fieldset class="fs"><legend>Business</legend>
         <div class="f"><label for="bn">Registered business name *</label><input id="bn" name="name" required autocomplete="organization"></div>
@@ -52,7 +60,7 @@ export function list() {
           <div class="f"><label for="bs">Speciality</label><input id="bs" name="subcategory" placeholder="e.g. Conveyancing"></div>
         </div>
         <div class="f"><label for="bt">One-line summary</label><input id="bt" name="tagline" maxlength="120" placeholder="What you do, in one sentence."></div>
-        <div class="f"><label for="bd">Description *</label><textarea id="bd" name="description" required minlength="50"></textarea><span class="hint">At least 50 characters. This is the text clients read.</span></div>
+        <div class="f"><label for="bd">Description of your business *</label><textarea id="bd" name="description" required minlength="50"></textarea><span class="hint">At least 50 characters. This is the text clients read.</span></div>
         <div class="row2">
           <div class="f"><label for="bcity">City *</label><select id="bcity" name="city" required><option value="">Choose one</option>${CITIES.map(c => `<option value="${c.slug}" data-prov="${c.province}">${c.name}</option>`).join('')}</select></div>
           <div class="f"><label for="bprov">Province *</label><select id="bprov" name="province" required><option value="">Choose one</option>${PROVINCES.map(p => `<option value="${p.slug}">${p.name}</option>`).join('')}</select></div>
@@ -67,30 +75,58 @@ export function list() {
           <div class="f"><label for="bp">Phone *</label><input id="bp" name="phone" required inputmode="tel" autocomplete="tel"></div>
           <div class="f"><label for="bem">Business email *</label><input id="bem" name="email" type="email" required autocomplete="email"></div>
         </div>
-        <div class="f"><label for="bw">Website</label><input id="bw" name="website" type="url" placeholder="https://"><span class="hint">Your Listed on Getclient badge goes here once you are approved.</span></div>
+        <div class="f"><label for="bw">Website *</label><input id="bw" name="website" type="url" required placeholder="https://yourbusiness.co.za"><span class="hint">Required. The Listed on Getclient badge goes on this website in the next step.</span></div>
         <div class="row2">
           <div class="f"><label for="bcn">Contact person *</label><input id="bcn" name="contact_name" required autocomplete="name"></div>
           <div class="f"><label for="bcr">Role</label><input id="bcr" name="contact_role" placeholder="Owner, Director…"></div>
         </div>
         <div class="f"><label for="bci">CIPC registration number <span data-req-cipc hidden>*</span></label><input id="bci" name="cipc" placeholder="2019/123456/07"><span class="hint">Required for Blue and Gold. Checked against the CIPC register.</span></div>
       </fieldset>
-      <fieldset class="fs"><legend>Photos <span style="font-weight:400;color:var(--mut)">(optional)</span></legend>
-        <div class="f"><label for="bphotos">Photos of your work, premises or team</label><input id="bphotos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="hint">Up to 6 images, 5&nbsp;MB each. The first becomes your cover image.</span></div>
+      <fieldset class="fs" data-plan-only="gold" hidden><legend>Your services <span class="tier tier--gold" style="margin-left:.3rem">Gold</span></legend>
+        <p class="hint" style="margin:0">List up to 12 services. They appear on your profile with your contact details.</p>
+        <div id="gc-services"></div>
+        <button type="button" class="btn btn-g btn-s" id="gc-add-service" style="justify-self:start"><i class="fa-solid fa-plus"></i> Add a service</button>
+      </fieldset>
+      <fieldset class="fs" data-plan-only="blue gold" hidden><legend>Photos <span style="font-weight:400;color:var(--mut)">(optional)</span></legend>
+        <div class="f"><label for="bphotos">Photos of your work, premises or team</label><input id="bphotos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple><span class="hint" id="gc-photo-hint">Blue: up to 6 images. Gold: up to 20. 5&nbsp;MB each. The first becomes your cover image.</span></div>
         <div id="gc-photo-preview" class="thumbs"></div>
       </fieldset>
+      <p class="note" data-plan-only="basic" style="font-size:.86rem">Basic listings show your description and contact details only. Photos, services and quote requests come with <a href="/pricing/#compare">Blue and Gold</a>.</p>
       <div class="pane-nav"><button type="button" class="btn btn-g" data-back="1">Back</button><button type="button" class="btn btn-p" data-next="3">Continue <i class="fa-solid fa-arrow-right"></i></button></div>
     </div>
 
     <div class="step-pane" data-pane="3" hidden>
+      <h2 style="font-size:1.3rem;margin-bottom:.3rem">Add the Getclient badge to your website</h2>
+      <p class="lede" style="margin-bottom:1.2rem">This step is required for every listing. Paste the code below into your website, publish it, then press <b>Check my website</b>. You cannot continue until we find it.</p>
+      <div class="grid g2" style="align-items:start">
+        <div class="stage" style="min-height:0;padding:1.6rem"><img src="/assets/badge/listed-light.svg" alt="Listed on Getclient" width="148" height="52"><span class="hint">What your visitors will see</span></div>
+        <ol class="howto">
+          <li>Copy the code.</li>
+          <li>Paste it into your website's footer, or any page. WordPress: Appearance → Widgets → Custom HTML. Wix: Settings → Custom code. Shopify: Online store → Themes → Edit code.</li>
+          <li>Publish your site, then check it below.</li>
+        </ol>
+      </div>
+      <div class="codebox" style="margin-top:1rem"><button type="button" class="btn btn-s copy" data-copy="#gc-badge-universal">Copy</button><pre id="gc-badge-universal">${esc(UNIVERSAL)}</pre></div>
+      <div class="badgecheck">
+        <div class="f" style="flex:1"><label for="gc-badge-url">Page where you added the badge</label><input id="gc-badge-url" type="url" placeholder="https://yourbusiness.co.za"></div>
+        <button type="button" class="btn btn-p" id="gc-badge-check"><i class="fa-solid fa-magnifying-glass"></i> Check my website</button>
+      </div>
+      <p class="msg" id="gc-badge-msg" role="status"></p>
+      <div class="pane-nav"><button type="button" class="btn btn-g" data-back="2">Back</button><button type="button" class="btn btn-p" data-next="4">Continue <i class="fa-solid fa-arrow-right"></i></button></div>
+    </div>
+
+    <div class="step-pane" data-pane="4" hidden>
+      ${stageBadge('Badge found. Your listing will carry it from day one.')}
       <h2 style="font-size:1.3rem;margin-bottom:.3rem">Verification documents</h2>
       <p class="lede" style="margin-bottom:1rem" id="gc-docs-intro"></p>
       <div class="note" style="margin-bottom:1.2rem"><strong>How your documents are handled.</strong> They go to a private store that is not publicly readable, are opened only by a reviewer through a short-lived link, and are deleted within 90 days of the check being recorded. Your profile shows only that a check passed and when, never the document.</div>
       <div id="gc-doc-fields"></div>
       <label class="chk" style="margin-top:1rem"><input type="checkbox" id="gc-doc-consent"><span>I consent to Digitalx processing these documents to verify this business, as described in the <a href="/privacy/">Privacy Policy and POPIA notice</a>.</span></label>
-      <div class="pane-nav"><button type="button" class="btn btn-g" data-back="2">Back</button><button type="button" class="btn btn-p" data-next="4">Continue <i class="fa-solid fa-arrow-right"></i></button></div>
+      <div class="pane-nav"><button type="button" class="btn btn-g" data-back="3">Back</button><button type="button" class="btn btn-p" data-next="5">Continue <i class="fa-solid fa-arrow-right"></i></button></div>
     </div>
 
-    <div class="step-pane" data-pane="4" hidden>
+    <div class="step-pane" data-pane="5" hidden>
+      ${stageBadge('Listed on Getclient: on your website and on your profile.')}
       <h2 style="font-size:1.3rem;margin-bottom:1rem">Confirm and submit</h2>
       <div class="card" id="gc-summary" style="margin-bottom:1.2rem"></div>
       <div class="fs" id="gc-promo-box" hidden style="margin-bottom:1.2rem"><legend>Discount code</legend>
@@ -98,46 +134,64 @@ export function list() {
         <p class="promo__msg" id="gc-promo-msg"></p></div>
       <fieldset class="fs"><legend>Declaration</legend>
         <label class="chk"><input type="checkbox" name="consent_terms" required value="true"><span>The information above is accurate and this is a legally operating South African business. I accept the <a href="/terms/">Terms</a> and <a href="/privacy/">Privacy Policy</a>.</span></label>
-        <label class="chk"><input type="checkbox" name="consent_review" required value="true"><span>I understand a badge is only issued once a reviewer confirms my documents, and that paying for a tier buys the verification work rather than the badge itself.</span></label>
-        <label class="chk"><input type="checkbox" id="gc-badge-consent" required><span>If my business has a website, I will display the <b>Listed on Getclient</b> badge on it, linking to my Getclient profile. <a href="/badge/" target="_blank">See the badge</a>.</span></label>
+        <label class="chk"><input type="checkbox" name="consent_review" required value="true"><span>I understand a verified badge is only issued once a reviewer confirms my documents, and that paying for a tier buys the verification work rather than the badge itself.</span></label>
+        <label class="chk"><input type="checkbox" id="gc-badge-consent" required><span>I will keep the <b>Listed on Getclient</b> badge on my website for as long as I am listed. Removing it can end the listing.</span></label>
       </fieldset>
-      <div class="pane-nav"><button type="button" class="btn btn-g" data-back="3">Back</button><button class="btn btn-p" type="submit" id="gc-submit">Submit for review</button></div>
+      <div class="ts" data-gc-turnstile="listing_submit"></div>
+      <div class="pane-nav"><button type="button" class="btn btn-g" data-back="4">Back</button><button class="btn btn-p" type="submit" id="gc-submit">Submit for review</button></div>
       <p id="gc-list-status" class="msg"></p>
     </div>
   </form>
 </div></section>`;
-  return page({ title: 'List your business', path: '/list/', body, pay: true, desc: 'List your South African business on Getclient for free, or apply for Blue or Gold verification. A person reviews every submission.' }, it);
+  return page({ title: 'List your business', path: '/list/', body, pay: true, turnstile: true, desc: 'List your South African business on Getclient for free, or apply for Blue or Gold verification. Every listing carries the Listed on Getclient badge.' }, it);
 }
 
 /* ================================================================ pricing */
+const cell = v => v === true ? '<i class="fa-solid fa-circle-check yes" aria-label="Included"></i>'
+  : v === false ? '<span class="no" aria-label="Not included">–</span>' : esc(v);
+
+export function compareTable() {
+  return `<div class="tablewrap cmp" id="compare"><table class="table">
+  <thead><tr><th scope="col">What you get</th><th scope="col">Basic<small>Free</small></th><th scope="col" class="cmp--blue">${seal('blue')} Blue Verified<small>${SITE.prices.blue} ${SITE.period}</small></th><th scope="col" class="cmp--gold">${seal('gold')} Gold Verified<small>${SITE.prices.gold} ${SITE.period}</small></th></tr></thead>
+  <tbody>${TIERS.slice(1).map(([k, a, b, c]) => `<tr><th scope="row">${esc(k)}</th><td data-l="Basic">${cell(a)}</td><td data-l="Blue" class="cmp--blue">${cell(b)}</td><td data-l="Gold" class="cmp--gold">${cell(c)}</td></tr>`).join('')}</tbody>
+  <tfoot><tr><th></th><td><a class="btn btn-g btn-s" href="/list/?plan=basic">Start free</a></td><td class="cmp--blue"><a class="btn btn-p btn-s" href="/list/?plan=blue">Apply for Blue</a></td><td class="cmp--gold"><a class="btn btn-gold btn-s" href="/list/?plan=gold">Apply for Gold</a></td></tr></tfoot>
+  </table></div>`;
+}
+
 export function pricing() {
   const it = [['Home', '/'], ['Pricing']];
   const li = (ok, t) => `<li${ok ? '' : ' class="no"'}><span style="color:${ok ? 'var(--blue)' : 'inherit'}">${ok ? '<i class="fa-solid fa-check"></i>' : '–'}</span> ${t}</li>`;
   const plan = (cls, chip, price, per, d, items, href, btn, b) => `<div class="plan${cls}">${chip}<div class="plan__price">${price}</div><div class="plan__period">${per}</div>
     <p style="font-size:.9rem;color:var(--mut)">${d}</p><ul>${items.map(([o, t]) => li(o, t)).join('')}</ul><a class="btn ${b} btn-blk" href="${href}">${btn}</a></div>`;
-  const body = `${ph(it, 'Pricing', 'Free to be listed. Paid to be verified.', 'The subscription pays for the verification work: pulling your CIPC record, confirming identity, checking insurance. It does not buy the badge. If a check fails, we refund and you stay on Basic.')}
+  const body = `${ph(it, 'Pricing', 'Free to be listed. Paid once a year to be verified.', 'Every tier carries the Listed on Getclient badge on its own website. Blue and Gold are billed once a year and pay for the verification work and the promotion. If a check fails, we refund and you stay on Basic.')}
 <section class="sec"><div class="wrap"><div class="plans">
-  ${plan('', '<span class="tier tier--none">Free listing</span>', 'R0', 'free forever', 'Get on the map. No card required.',
-    [[1, 'Directory listing'], [1, 'Business profile page'], [1, 'Contact button'], [1, '3 photos'], [1, 'Quote requests'], [1, '<b>Listed on Getclient</b> website badge'], [0, 'Verification badge'], [0, 'Sponsored ad placement'], [0, 'Analytics']], '/list/?plan=basic', 'Start free', 'btn-g')}
-  ${plan(' plan--feature', `<span class="tier tier--blue">${seal('blue')} Blue Verified</span>`, SITE.prices.blue, 'per month, cancel anytime', 'Identity and CIPC confirmed. Badge on your listing and your own site.',
-    [[1, 'Everything in Basic'], [1, 'Blue badge next to your name'], [1, 'Identity + CIPC check'], [1, 'Blue Verified website badge'], [1, 'Unlimited photos'], [1, 'Analytics dashboard'], [1, 'Priority support'], [0, 'Gold badge'], [0, 'Sponsored ad placement']], '/list/?plan=blue', 'Apply for Blue Verified', 'btn-p')}
-  ${plan('', `<span class="tier tier--gold">${seal('gold')} Gold Verified</span>`, SITE.prices.gold, 'per month, cancel anytime', 'The full check, plus automatic ad placement across the directory.',
-    [[1, 'Everything in Blue'], [1, 'Gold badge next to your name'], [1, 'Insurance + tax clearance check'], [1, '3+ years trading confirmed'], [1, 'Automatic sponsored placement, labelled Ad'], [1, 'Featured on the homepage, your category and your city'], [1, 'Dedicated account manager']], '/list/?plan=gold', 'Apply for Gold Verified', 'btn-g')}
-</div><div class="note" style="margin-top:1.8rem">All prices in ZAR and exclude VAT. Billing runs through Paystack.</div></div></section>
-<section class="sec sec--surf"><div class="wrap"><h2 style="margin-bottom:1.6rem">Common questions</h2>${cards([
-  ['Can I buy a badge without the check?', 'No. The tier is set by our reviewers after the checks pass, and the applicant cannot set it themselves. Paying for Blue or Gold buys the verification work and the placement, not the badge on its own.'],
-  ['Do free listings get a website badge?', 'Yes. Every approved listing gets the Listed on Getclient badge, and every listed business with a website is asked to display it. Blue and Gold listings show their tier on the same badge.'],
-  ['What happens if I cancel?', 'Your listing drops to Basic and stays in the directory. A Blue or Gold badge on your own website switches to Listed on Getclient within 24 hours because it checks its status live.'],
-  ['Do you take a commission on jobs?', 'No. Getclient charges a flat monthly subscription. What you agree with a client is between you and them.'],
-  ['Is there a contract?', 'No lock-in. Monthly, cancel anytime. Verification is re-run every 12 months while you are subscribed.']])}</div></section>`;
-  return page({ title: 'Pricing', path: '/pricing/', body, desc: `Free listing with the Listed on Getclient badge. Blue Verified ${SITE.prices.blue} per month, Gold Verified ${SITE.prices.gold} per month.` }, it);
+  ${plan('', '<span class="tier tier--none">Basic</span>', 'R0', 'free forever', 'A description of your business and your contact details. That is all.',
+    [[1, 'Directory listing and profile page'], [1, 'Business description'], [1, 'Contact details'], [1, '<b>Listed on Getclient</b> badge (required)'], [0, 'Photos'], [0, 'Services list'], [0, 'Quote requests'], [0, 'Promotion']], '/list/?plan=basic', 'Start free', 'btn-g')}
+  ${plan(' plan--feature', `<span class="tier tier--blue">${seal('blue')} Blue Verified</span>`, SITE.prices.blue, SITE.period, 'Identity and CIPC confirmed, and recognised across the whole site.',
+    [[1, 'Everything in Basic'], [1, 'Blue seal next to your name'], [1, 'Identity + CIPC check'], [1, 'Up to 6 photos'], [1, 'Quote requests emailed to you'], [1, 'WhatsApp button'], [1, 'Blue Verified showcase on every page, under Gold'], [1, 'Ranked above every Basic listing'], [0, 'Services list'], [0, 'Ads on every page']], '/list/?plan=blue', 'Apply for Blue Verified', 'btn-p')}
+  ${plan(' plan--gold', `<span class="tier tier--gold">${seal('gold')} Gold Verified</span>`, SITE.prices.gold, SITE.period, 'The full check, and your business advertised on every page of Getclient.',
+    [[1, 'Everything in Blue'], [1, 'Gold seal next to your name'], [1, 'Insurance, tax clearance, 3+ years trading'], [1, '<b>Ads on every page and section</b>'], [1, 'List up to 12 services'], [1, 'Up to 20 photos and a cover image'], [1, 'Top of every list'], [1, 'Dedicated account manager']], '/list/?plan=gold', 'Apply for Gold Verified', 'btn-gold')}
+</div></div></section>
+<section class="sec sec--surf"><div class="wrap">
+  <div class="head"><div><p class="eyebrow">Compare</p><h2 style="margin:0">Every benefit, side by side</h2></div></div>
+  ${compareTable()}
+  <div class="note" style="margin-top:1.4rem">All prices in ZAR, billed once a year in advance through Paystack, and exclude VAT. Verification is re-run every 12 months on renewal.</div>
+</div></section>
+<section class="sec"><div class="wrap"><h2 style="margin-bottom:1.6rem">Common questions</h2>${cards([
+  ['Why must every listing show the badge?', 'The badge is how Getclient grows and how your visitors check you are real. Every application has to show the Listed on Getclient badge on its website before it can be approved, on every tier.'],
+  ['Can I buy a badge without the check?', 'No. The tier is set by our reviewers after the checks pass, and the applicant cannot set it themselves. Paying for Blue or Gold buys the verification work and the promotion, not the badge on its own.'],
+  ['What exactly does Gold advertising include?', 'Gold businesses appear in the sponsored bar at the top of every page, in the featured Gold section at the bottom of every page, first in every list, beside other businesses’ profiles and above search results. Every placement is labelled Ad.'],
+  ['What does Blue promotion include?', 'Blue Verified businesses appear in the Blue Verified showcase on every page, directly under the Gold section, and rank above every Basic listing.'],
+  ['What happens if I do not renew?', 'Your listing drops to Basic and stays in the directory with your description and contact details. The badge on your website switches to Listed on Getclient within 24 hours.'],
+  ['Do you take a commission on jobs?', 'No. Getclient charges a flat annual fee. What you agree with a client is between you and them.']])}</div></section>`;
+  return page({ title: 'Pricing and tier comparison', path: '/pricing/', body, desc: `Basic is free. Blue Verified ${SITE.prices.blue} per year. Gold Verified ${SITE.prices.gold} per year with ads on every page. Compare every benefit.` }, it);
 }
 
 /* ================================================================ badge */
 export function badge(sizes) {
   const it = [['Home', '/'], ['Website badge']];
   const img = (n, w) => `<img src="/assets/badge/${n}.svg" alt="" width="${sizes[n][0]}" height="${sizes[n][1]}">`;
-  const body = `${ph(it, 'Listed on Getclient', 'Put the badge on your website', 'Every business listed on Getclient displays the <b>Listed on Getclient</b> badge on its own website. A visitor who clicks it lands on your checked record here. That is how the trust travels with you.')}
+  const body = `${ph(it, 'Listed on Getclient', 'Put the badge on your website', 'Every business on Getclient, on every tier, must display the <b>Listed on Getclient</b> badge on its own website. Applications are only approved once we find it. A visitor who clicks it lands on your checked record here.')}
 <section class="sec sec--tight"><div class="wrap"><div class="grid g2">
   <div class="stage">${'<div class="stage__row">' + img('listed-light') + img('blue-light') + img('gold-light') + '</div>'}<span class="hint">Light, for white or pale backgrounds</span></div>
   <div class="stage stage--d">${'<div class="stage__row">' + img('listed-dark') + img('blue-dark') + img('gold-dark') + '</div>'}<span class="hint" style="color:#9FB3E6">Dark, for navy or black footers</span></div>
@@ -179,13 +233,13 @@ export function badge(sizes) {
       <p>For social bios, quotes and invoices.</p>
       <div class="codebox"><button type="button" class="btn btn-s copy" data-copy="#bb-code-link">Copy</button><pre id="bb-code-link"></pre></div>
 
-      <div class="note" style="margin-top:1.6rem"><strong>Already have a badge on your site?</strong> Nothing to change. Every badge code we have ever issued keeps working and now shows the new design automatically.</div>
+      <div class="note" style="margin-top:1.6rem"><strong>Applying now and have no listing ID yet?</strong> Use <code>&lt;script src=&quot;https://getclient.co.za/badge.js&quot; async&gt;&lt;/script&gt;</code>. It recognises your website by its address and starts showing your listing the moment you are approved.<br><br><strong>Already have a badge on your site?</strong> Nothing to change. Every badge code we have ever issued keeps working and now shows the new design automatically.</div>
     </div>
   </div>
 </div></section>
 
 <section class="sec sec--surf"><div class="wrap"><h2 style="margin-bottom:1.6rem">Rules for using the badge</h2>${cards([
-  ['Every listing shows it', 'Displaying the Listed on Getclient badge is part of being listed. If your business has a website, put the badge on it, ideally in the footer so it appears on every page.'],
+  ['Every listing shows it', 'Displaying the Listed on Getclient badge is a condition of being listed, on Basic, Blue and Gold. We check your website for it before approval and from time to time after. Put it in your footer so it appears on every page.'],
   ['It links to your record', 'The badge must link to your Getclient profile so a visitor can check the claim. Badges that link elsewhere breach the terms.'],
   ['It stays honest', 'Display only the tier you currently hold. The script enforces this automatically; if you use the plain HTML version, update it when your tier changes.'],
   ['The link is nofollow', 'Every badge link carries rel="nofollow" on purpose. Site-wide widget links that pass ranking signals count as a link scheme under Google’s guidelines. The value is the trust signal to people, not a backlink.'],
@@ -298,8 +352,8 @@ export const terms = () => legal('/terms/', 'Terms of Service', `These terms gov
   ['1. Who we are', `Getclient is a directory service operated by ${SITE.company}, registered in South Africa and contactable at ${SITE.email}.`],
   ['2. What Getclient is not', 'Getclient introduces you to businesses. We are not a party to any agreement you reach with them, we do not supply their services, and we do not guarantee the outcome of any job. A verification badge confirms that specific checks passed on a stated date. It is not a warranty of workmanship.'],
   ['3. Listing rules', 'You may only submit a listing for a business you are authorised to represent. Information must be accurate and kept current. Listings that misstate registration, insurance or trading history are removed without refund.'],
-  ['4. Badges', 'Every listed business that operates a website must display the Listed on Getclient badge on it, linking to its Getclient profile. Verification badges and the embeddable website badge remain our property and are licensed to you for as long as your listing is active, at the tier it holds. You may display the badge on properties you own, linking to your Getclient profile. You may not alter its colours, text or link, or display a tier you do not hold. The licence ends when your listing ends.'],
-  ['5. Fees', 'Subscriptions are billed monthly in advance in ZAR through Paystack and may be cancelled at any time, effective at the end of the paid period. Verification fees cover the work of checking; where a check cannot be completed for reasons on our side, the fee is refunded.'],
+  ['4. Badges', 'Every listed business must operate a website and display the Listed on Getclient badge on it, linking to Getclient, for as long as it is listed. Applications are approved only once the badge is found, and removing it may end the listing. Verification badges and the embeddable website badge remain our property and are licensed to you for as long as your listing is active, at the tier it holds. You may display the badge on properties you own, linking to your Getclient profile. You may not alter its colours, text or link, or display a tier you do not hold. The licence ends when your listing ends.'],
+  ['5. Fees', 'Blue Verified (R499) and Gold Verified (R1,299) are billed once a year in advance in ZAR through Paystack. A tier that is not renewed reverts to Basic at the end of the paid year. Verification fees cover the work of checking; where a check cannot be completed for reasons on our side, the fee is refunded.'],
   ['6. Reviews and content', 'You keep ownership of what you post and grant us a licence to display it. We may remove content that is abusive, unlawful, off-topic or not traceable to a real transaction. We do not remove reviews because a business asks us to.'],
   ['7. Suspension', 'We may suspend or remove a listing that breaches these terms, misuses the badge, or is the subject of a substantiated complaint. Where practical we give notice and a chance to fix it.'],
   ['8. Liability', 'To the extent permitted by South African law, our liability arising from use of the directory is limited to the fees you paid us in the three months before the claim. Nothing here limits liability that cannot lawfully be limited, including under the Consumer Protection Act.'],
@@ -307,22 +361,29 @@ export const terms = () => legal('/terms/', 'Terms of Service', `These terms gov
 
 /* ================================================================ admin, 404, offline */
 export function admin() {
+  const tab = (s, label, icon, on) => `<button class="atab${on ? ' on' : ''}" data-status="${s}"><i class="fa-solid ${icon}"></i> ${label} <b data-count="${s}">–</b></button>`;
   const body = `<section class="sec" style="padding-top:2.4rem"><div class="wrap" id="gc-admin">
   <div id="gc-login"><div class="card" style="max-width:440px;margin-inline:auto;padding:2rem">
     <img src="/assets/brand/mark.svg" alt="" width="44" height="44" style="margin-bottom:1rem">
-    <h1 style="font-size:1.5rem;margin-bottom:.3rem">Reviewer sign-in</h1><p class="mut" style="font-size:.9rem">Approval queue for Getclient submissions.</p>
+    <h1 style="font-size:1.5rem;margin-bottom:.3rem">Reviewer sign-in</h1><p class="mut" style="font-size:.9rem">Manage Getclient applications.</p>
     <form class="form" id="gc-login-form" style="margin-top:1.2rem">
       <div class="f"><label for="gc-email">Email</label><input id="gc-email" type="email" required autocomplete="username"></div>
       <div class="f"><label for="gc-password">Password</label><input id="gc-password" type="password" required autocomplete="current-password"></div>
       <button class="btn btn-p btn-blk" type="submit">Sign in</button><p id="gc-login-msg" style="font-size:.85rem;margin:0"></p></form></div></div>
+
   <div id="gc-admin-main" hidden>
-    <h1 style="font-size:1.7rem">Approval queue</h1>
-    <p class="lede" style="margin-bottom:1.2rem">Approving publishes a listing immediately at Basic, with the Listed on Getclient badge. To issue a verified badge, open <strong>Set verification tier</strong> on an approved listing, tick the checks you actually completed, choose the tier and save. Blue needs identity and CIPC; Gold needs all five. The panel will not let you set a tier whose checks are not ticked.</p>
-    <div class="tabs"><button class="chip on" data-status="pending">Pending</button><button class="chip" data-status="approved">Approved</button><button class="chip" data-status="rejected">Rejected</button><button class="chip" data-status="suspended">Suspended</button></div>
+    <div class="head" style="margin-bottom:1.2rem"><div><p class="eyebrow">Reviewer panel</p><h1 style="font-size:1.8rem;margin:0">Applications</h1></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap"><input id="gc-admin-q" class="ainput" type="search" placeholder="Search name, ID, email"><button class="btn btn-g btn-s" id="gc-admin-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-g btn-s" id="gc-admin-out">Sign out</button></div></div>
+    <div class="atabs" role="tablist">
+      ${tab('pending', 'Pending', 'fa-hourglass-half', true)}${tab('approved', 'Approved', 'fa-circle-check')}${tab('rejected', 'Rejected', 'fa-circle-xmark')}${tab('suspended', 'Suspended', 'fa-ban')}${tab('quotes', 'Quote requests', 'fa-paper-plane')}
+    </div>
+    <div class="note" id="gc-admin-help" style="margin:1rem 0 1.4rem;font-size:.86rem">
+      <b>Pending</b>: check the badge, open the documents, then approve or reject. Approval is blocked until the Listed on Getclient badge is found on the business's website.
+      <b>Rejected</b> applications get an email explaining the issue, how to fix it and where to continue. <b>Approved</b> listings get a welcome-to-the-directory email. Each application moves to its section as soon as you act on it.</div>
     <div id="gc-queue"></div>
-    <div class="note" style="margin-top:1.4rem">Approved listings and badge changes appear on the site within minutes without a rebuild. Run <code>npm run build</code> and redeploy at your convenience so search engines get the static pages too.</div>
-  </div></div></section>`;
-  return layout({ title: 'Reviewer panel', path: '/admin/', body, noindex: true, desc: 'Getclient reviewer panel.' });
+  </div>
+</div></section>`;
+  return layout({ title: 'Reviewer panel', path: '/admin/', body, noindex: true, promo: false, admin: true, desc: 'Getclient reviewer panel.' });
 }
 
 export function notFound() {

@@ -75,11 +75,15 @@
   function html(o, d) {
     var tier = d.tier === 'gold' || d.tier === 'blue' ? d.tier : 'none';
     var label = tier === 'gold' ? 'Gold Verified' : tier === 'blue' ? 'Blue Verified' : '';
-    var url = ORIGIN + (d.url || '/b/' + encodeURIComponent(o.id) + '/');
+    var url = ORIGIN + (d.url || (o.id ? '/b/' + encodeURIComponent(o.id) + '/' : '/'));
     var title = (d.name ? d.name + ' is listed on Getclient' + (label ? ' — ' + label : '') : 'Listed on Getclient') +
       '. Click to view the verification record.';
     var text;
-    if (o.size === 'compact') {
+    if (d.pending) {
+      text = o.size === 'compact' ? '<span class="k">Applying to <b>Getclient</b></span>'
+        : '<span class="k">Listing pending on</span><span class="v">Getclient</span>';
+      title = 'This business has applied to be listed on Getclient, South Africa’s verified business directory.';
+    } else if (o.size === 'compact') {
       text = '<span class="k">' + (label ? esc(label) + ' · <b>Getclient</b>' : 'Listed on <b>Getclient</b>') + '</span>';
     } else if (label) {
       text = '<span class="k on">Listed on Getclient</span><span class="v">' + label + '</span>';
@@ -97,7 +101,7 @@
     root.innerHTML = html(o, d || {});
     return root;
   }
-  window.GetclientBadge = { mount: mount, version: 2 };
+  window.GetclientBadge = { mount: mount, version: 3 };
 
   /* ---------- auto-mount every <script data-gc-id> ---------- */
   function lookup(id) {
@@ -118,10 +122,37 @@
       });
   }
 
+  // No listing ID (the code applicants add before they have one): find the
+  // listing by this website's address. Until it is approved the badge reads
+  // "Listing pending on Getclient" and links to the directory.
+  function lookupDomain() {
+    var dom = location.hostname.toLowerCase().replace(/^www\./, '');
+    if (!dom || dom === 'localhost') return Promise.resolve({ pending: true });
+    return fetch(DB + '?select=id,slug,name,tier,website&website=ilike.*' + encodeURIComponent(dom) + '*&limit=5', {
+      headers: { apikey: KEY, Authorization: 'Bearer ' + KEY }, mode: 'cors'
+    }).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (rows) {
+      var b = (rows || []).filter(function (x) {
+        try { return new URL(/^https?:/i.test(x.website) ? x.website : 'https://' + x.website).hostname.toLowerCase().replace(/^www\./, '') === dom; }
+        catch (e) { return false; }
+      })[0];
+      return b ? { id: b.id, name: b.name, tier: b.tier, listed: true, url: '/b/' + b.slug + '/' } : { pending: true };
+    });
+  }
+
+  // Tell Getclient this website shows the badge (reviewers use it as proof).
+  function ping(id) {
+    try {
+      fetch(DB.replace('/gc_listings_public', '/rpc/gc_badge_ping'), {
+        method: 'POST', mode: 'cors', keepalive: true,
+        headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_id: id || '' })
+      }).catch(function () {});
+    } catch (e) { /* older browsers */ }
+  }
+
   function boot(script) {
     if (!script || script.getAttribute('data-gc-mounted')) return;
     var id = (script.getAttribute('data-gc-id') || '').trim();
-    if (!id) return;
     script.setAttribute('data-gc-mounted', '1');
     var o = {
       id: id,
@@ -131,22 +162,23 @@
     };
     var host = document.createElement('span');
     host.className = 'getclient-badge-host';
-    host.setAttribute('data-gc-id', id);
+    if (id) host.setAttribute('data-gc-id', id);
     script.parentNode.insertBefore(host, script);
-    mount(host, o, { tier: 'none' });          // "Listed on Getclient" straight away
-
+    mount(host, o, id ? { tier: 'none' } : { pending: true });   // something useful straight away
     if (!window.fetch) return;
-    lookup(id).then(function (d) {
-      if (d && d.listed) mount(host, o, d);
+    ping(id);
+
+    (id ? lookup(id) : lookupDomain()).then(function (d) {
+      if (d && (d.listed || d.pending)) mount(host, o, d);
       else if (d && d.listed === false && host.parentNode) host.parentNode.removeChild(host);  // removed listing
     }).catch(function () { /* network trouble: keep the neutral badge */ });
   }
 
   var cur = document.currentScript;
-  if (cur && cur.getAttribute('data-gc-id')) boot(cur);
+  if (cur && (cur.src || '').indexOf('badge.js') > -1) boot(cur);
   // also pick up badges added before this script ran, or several on one page
-  var all = document.querySelectorAll('script[data-gc-id]');
+  var all = document.querySelectorAll('script[src*="badge.js"]');
   for (var i = 0; i < all.length; i++) {
-    if ((all[i].src || '').indexOf('badge.js') > -1) boot(all[i]);
+    if (/getclient\.co\.za|\/badge\.js/.test(all[i].src || '')) boot(all[i]);
   }
 })();
