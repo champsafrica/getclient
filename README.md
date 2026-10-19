@@ -5,7 +5,9 @@ Blue and white, with a South African accent: the national colours appear only as
 
 The site is a static build. Listings, ratings, quotes, payments and the reviewer panel all
 run against the existing Supabase project, and the build only **reads** the
-`gc_listings_public` view. Existing rows are never changed; the migration below only adds.
+`gc_listings_public` view. The whole database setup is one file, `supabase/schema.sql`: re-runnable,
+it only adds what is missing and never deletes or changes data. It touches only `gc_` objects, so the
+Digitalx Client Portal tables in the same Supabase project are safe.
 
 ## Tiers
 
@@ -26,7 +28,7 @@ Gold profile content kept in the repo (Digitalx's cover, services, phone lines) 
 
 The site works as soon as `dist/` is uploaded, but these features need the Supabase side:
 badge checks, quote emails, welcome / approval / rejection emails, and Turnstile.
-Do the steps **in this order** (the migration switches off the old direct writes).
+Do the steps **in this order** (the schema switches off the old direct writes).
 
 1. **Email (Resend).** Create an account at resend.com, verify the domain you will send from
    (e.g. getclient.co.za) and create an API key.
@@ -46,8 +48,9 @@ Do the steps **in this order** (the migration switches off the old direct writes
    | `MAIL_FROM` | e.g. `Getclient <info@getclient.co.za>` |
    | `MAIL_CC` | `info@getclient.co.za` (the default) |
    | `MAILER_HOOK_SECRET` | From step 5 |
-4. **Run the migration.** Paste `supabase/migrations/20261019000000_tiers_badges_email.sql` into the
-   SQL editor and run it (or `supabase db push`).
+4. **Run the schema.** Back up first (Database → Backups, or `supabase db dump`). Then paste
+   `supabase/schema.sql` into the SQL editor and run it. The checks at the bottom of the file confirm
+   your listings, ratings, photos, quotes and payments are all still there.
 5. **Connect the status emails.** In the SQL editor run
    `select value from public.gc_private_settings where key = 'mailer_hook_secret';`
    and save that value as the `MAILER_HOOK_SECRET` function secret.
@@ -63,8 +66,9 @@ What changes once this is done:
 * Photos can only be added to Blue and Gold listings (database trigger).
 * Quote requests and listings are only accepted with a valid Turnstile token.
 
-Optional: to show quote requests in `/admin/`, give your reviewer accounts read access to
-`gc_quotes` (an RLS select policy that matches how `gc_admins` identifies reviewers).
+Reviewers are the users in `gc_admins`; they can read quote requests in `/admin/`. The public key can
+no longer read the `gc_listings` table directly (it used to expose CIPC numbers and contact names);
+the website reads `gc_listings_public` instead.
 
 ## Quick start
 

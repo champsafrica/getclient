@@ -19,7 +19,7 @@ const CACHE = path.join(ROOT, '.cache', 'listings.json');
 const CFG = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'config.json'), 'utf8'));
 const offline = process.argv.includes('--offline');
 
-// Gold services from gc_services (added by the migration). Missing table: none yet.
+// Blue and Gold services from gc_services (created by supabase/schema.sql). Missing table: none yet.
 async function pullServices() {
   if (offline) { try { return JSON.parse(fs.readFileSync(CACHE.replace('listings', 'services'), 'utf8')); } catch { return []; } }
   const r = await fetch(`${CFG.supabaseUrl}/rest/v1/${CFG.tablePrefix}services?select=listing_id,name,description,price_from,sort&order=sort.asc`,

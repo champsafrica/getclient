@@ -265,7 +265,7 @@
         });
       }).catch(function (err) {
         send.disabled = false;
-        alert('Did not save: ' + (err.message || err) + (/reject_reason|column/i.test(err.message || '') ? '\n\nRun the database migration in supabase/migrations first.' : ''));
+        alert('Did not save: ' + (err.message || err) + (/reject_reason|column/i.test(err.message || '') ? '\n\nRun supabase/schema.sql in Supabase first.' : ''));
       });
       return;
     }
