@@ -53,9 +53,97 @@
     m.textContent = 'Signing in…';
     sb.auth.signInWithPassword({ email: $('#gc-email').value, password: $('#gc-password').value }).then(function (r) {
       if (r.error) { m.textContent = 'Those credentials did not work.'; return; }
-      show('main'); refresh();
+      show('main'); refresh(); offerPasskey();
     });
   });
+
+  /* ---------- fingerprint / face sign-in (passkeys) ---------- */
+  // The device checks the fingerprint or face and signs a one-time challenge;
+  // the admin-passkey edge function verifies it and returns a sign-in token.
+  var CFG = window.GC_CONFIG || {};
+  var WA = window.SimpleWebAuthnBrowser;
+  var pkMsg = $('#gc-pk-msg');
+  function pkFn(body, token) {
+    return fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/admin-passkey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + (token || CFG.supabaseAnonKey) },
+      body: JSON.stringify(body)
+    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, data: d }; }); })
+      .catch(function () { return { status: 0, data: {} }; });
+  }
+  function pkSupported() {
+    if (!WA || !window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) return Promise.resolve(false);
+    return PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(function () { return false; });
+  }
+  var store = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } } };
+
+  function deviceName() {
+    var u = navigator.userAgent;
+    return /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) ? 'iPad' : /Android/.test(u) ? 'Android phone' :
+      /Mac/.test(u) ? 'Mac' : /Windows/.test(u) ? 'Windows PC' : 'This device';
+  }
+
+  function turnOn() {
+    pkMsg.className = 'msg'; pkMsg.textContent = 'Follow the prompt on your device…';
+    sb.auth.getSession().then(function (s) {
+      var token = s.data && s.data.session && s.data.session.access_token;
+      if (!token) { pkMsg.className = 'msg err'; pkMsg.textContent = 'Sign in with your password first.'; return; }
+      return pkFn({ action: 'register-options' }, token).then(function (o) {
+        if (o.status !== 200) throw new Error(o.status === 404 || o.status === 0 ? 'Fingerprint sign-in is not switched on yet (deploy the admin-passkey function).' : (o.data.message || 'Could not start.'));
+        return WA.startRegistration(o.data.options);
+      }).then(function (att) {
+        return pkFn({ action: 'register-verify', response: att, device: deviceName() }, token);
+      }).then(function (v) {
+        if (v.status !== 200) throw new Error(v.data.message || 'Setting it up did not complete.');
+        store.set('gc_pk_on', '1');
+        $('#gc-pk-offer').hidden = true;
+        pkMsg.className = 'msg ok'; pkMsg.textContent = 'Done. Next time, choose "Sign in with fingerprint or face".';
+      });
+    }).catch(function (err) {
+      pkMsg.className = 'msg err';
+      pkMsg.textContent = err && err.name === 'NotAllowedError' ? 'Cancelled. You can turn it on any time from the Fingerprint / face button.' : (err.message || String(err));
+    });
+  }
+
+  function offerPasskey() {
+    pkSupported().then(function (yes) {
+      if (!yes) return;
+      $('#gc-pk-setup').hidden = false;
+      if (!store.get('gc_pk_on') && !store.get('gc_pk_later')) $('#gc-pk-offer').hidden = false;
+    });
+  }
+  $('#gc-pk-on').addEventListener('click', turnOn);
+  $('#gc-pk-setup').addEventListener('click', turnOn);
+  $('#gc-pk-later').addEventListener('click', function () { store.set('gc_pk_later', '1'); $('#gc-pk-offer').hidden = true; });
+
+  pkSupported().then(function (yes) { if (yes) $('#gc-pk-login-box').hidden = false; });
+  $('#gc-pk-login').addEventListener('click', function () {
+    var m = $('#gc-login-msg'), btn = this;
+    btn.disabled = true; m.textContent = 'Follow the prompt on your device…';
+    pkFn({ action: 'login-options' }).then(function (o) {
+      if (o.status !== 200) throw new Error(o.status === 404 || o.status === 0 ? 'Fingerprint sign-in is not switched on yet. Use your password.' : (o.data.message || 'Could not start.'));
+      return WA.startAuthentication(o.data.options).then(function (asr) {
+        return pkFn({ action: 'login-verify', response: asr, challenge_id: o.data.challenge_id });
+      });
+    }).then(function (v) {
+      if (v.status !== 200 || !v.data.token_hash) throw new Error(v.data.message || 'That sign-in was not accepted.');
+      return sb.auth.verifyOtp({ token_hash: v.data.token_hash, type: 'magiclink' });
+    }).then(function (r) {
+      btn.disabled = false;
+      if (r.error) throw r.error;
+      store.set('gc_pk_on', '1');
+      m.textContent = '';
+      show('main'); refresh(); offerPasskey();
+    }).catch(function (err) {
+      btn.disabled = false;
+      m.textContent = err && err.name === 'NotAllowedError' ? 'Cancelled.' : (err.message || String(err));
+    });
+  });
+
+  // the app shortcut "Pending applications" opens /admin/?tab=...
+  var wantTab = new URLSearchParams(location.search).get('tab');
+  if (wantTab) setTimeout(function () { var t = $('.atab[data-status="' + wantTab.replace(/[^a-z]/g, '') + '"]'); if (t) t.click(); }, 0);
   $('#gc-admin-out').addEventListener('click', function () { sb.auth.signOut().then(function () { show('login'); }); });
   $('#gc-admin-refresh').addEventListener('click', refresh);
   $('#gc-admin-q').addEventListener('input', function () { filter = this.value.trim().toLowerCase(); render(); });
@@ -320,6 +408,6 @@
     });
   }, true);
 
-  if (LIVE) sb.auth.getSession().then(function (r) { if (r.data && r.data.session) { show('main'); refresh(); } else show('login'); });
+  if (LIVE) sb.auth.getSession().then(function (r) { if (r.data && r.data.session) { show('main'); refresh(); offerPasskey(); } else show('login'); });
   else show('login');
 })();

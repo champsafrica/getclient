@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Getclient: complete Supabase schema (v2)
--- Project: nfdzcjwncbpsruieaxis (shared with the Digitalx Client Portal)
+-- Project: nfdzcjwncbpsruieaxis (Getclient only)
 --
 -- One file that replaces the old schema.sql and every add-on migration.
 --
@@ -9,8 +9,6 @@
 --     only if missing. Only views, functions, triggers and policies are
 --     replaced, and none of those hold data.
 --   * Touches only gc_ objects and the gc-photos / gc-docs storage buckets.
---     The portal's clients / orders / invoices / documents / team /
---     notifications / requests / activity / discounts tables are left alone.
 --   * Safe to re-run.
 --
 -- Run it AFTER deploying the edge functions in supabase/functions
@@ -208,7 +206,6 @@ create table if not exists gc_badge_pings (
 );
 
 -- -------------------------------------------------------------- admins
--- Separate from the portal's own team table.
 create table if not exists gc_admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
   email text, role text default 'reviewer'
@@ -216,6 +213,27 @@ create table if not exists gc_admins (
 
 -- private settings read by triggers (mailer address and secret); never exposed
 create table if not exists gc_private_settings (key text primary key, value text not null);
+
+-- fingerprint / face sign-in for reviewers (passkeys). Only the admin-passkey
+-- edge function reads or writes these; the browser has no access.
+create table if not exists gc_passkeys (
+  id          text primary key,          -- credential id (base64url)
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  public_key  text not null,             -- base64url
+  counter     bigint not null default 0,
+  transports  text[],
+  device      text,
+  created_at  timestamptz not null default now(),
+  last_used   timestamptz
+);
+create index if not exists gc_passkeys_user on gc_passkeys(user_id);
+create table if not exists gc_passkey_challenges (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references auth.users(id) on delete cascade,   -- null for sign-in
+  kind       text not null check (kind in ('register', 'login')),
+  challenge  text not null,
+  created_at timestamptz not null default now()
+);
 
 -- Child keys follow a renamed public_id (re-pointed in case an older table
 -- was created without ON UPDATE CASCADE). Data is not touched.
@@ -619,6 +637,8 @@ alter table gc_badge_events     enable row level security;
 alter table gc_badge_pings      enable row level security;   -- no policies: no direct access
 alter table gc_admins           enable row level security;
 alter table gc_private_settings enable row level security;   -- no policies: no direct access
+alter table gc_passkeys           enable row level security;   -- no policies: edge function only
+alter table gc_passkey_challenges enable row level security; -- no policies: edge function only
 
 -- taxonomy: public read
 drop policy if exists gc_read_cats on gc_categories;
@@ -712,7 +732,7 @@ revoke insert on gc_listings from anon, authenticated;
 revoke insert on gc_quotes   from anon, authenticated;
 grant insert on gc_documents, gc_photos, gc_payments to anon, authenticated;
 revoke update on gc_payments from anon, authenticated;
-revoke all on gc_private_settings, gc_badge_pings from anon, authenticated;
+revoke all on gc_private_settings, gc_badge_pings, gc_passkeys, gc_passkey_challenges from anon, authenticated;
 
 revoke all on function gc_is_admin()                    from public;
 grant execute on function gc_is_admin()                 to anon, authenticated;

@@ -369,11 +369,19 @@ export function admin() {
     <form class="form" id="gc-login-form" style="margin-top:1.2rem">
       <div class="f"><label for="gc-email">Email</label><input id="gc-email" type="email" required autocomplete="username"></div>
       <div class="f"><label for="gc-password">Password</label><input id="gc-password" type="password" required autocomplete="current-password"></div>
-      <button class="btn btn-p btn-blk" type="submit">Sign in</button><p id="gc-login-msg" style="font-size:.85rem;margin:0"></p></form></div></div>
+      <button class="btn btn-p btn-blk" type="submit">Sign in</button><p id="gc-login-msg" style="font-size:.85rem;margin:0"></p></form>
+    <div id="gc-pk-login-box" hidden><div class="or"><span>or</span></div>
+      <button class="btn btn-g btn-blk" type="button" id="gc-pk-login"><i class="fa-solid fa-fingerprint"></i> Sign in with fingerprint or face</button></div>
+    <p class="hint" style="margin:1.2rem 0 0;text-align:center" id="gc-install-hint"><i class="fa-solid fa-mobile-screen"></i> Install this as an app: on Android or Chrome use <b>Install</b>; on iPhone tap <b>Share</b> then <b>Add to Home Screen</b>.</p>
+  </div></div>
 
   <div id="gc-admin-main" hidden>
     <div class="head" style="margin-bottom:1.2rem"><div><p class="eyebrow">Reviewer panel</p><h1 style="font-size:1.8rem;margin:0">Applications</h1></div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap"><input id="gc-admin-q" class="ainput" type="search" placeholder="Search name, ID, email"><button class="btn btn-g btn-s" id="gc-admin-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-g btn-s" id="gc-admin-out">Sign out</button></div></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap"><input id="gc-admin-q" class="ainput" type="search" placeholder="Search name, ID, email"><button class="btn btn-g btn-s" id="gc-admin-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-g btn-s" id="gc-pk-setup" hidden><i class="fa-solid fa-fingerprint"></i> Fingerprint / face</button><button class="btn btn-g btn-s" id="gc-admin-out">Sign out</button></div></div>
+    <div class="note note--ok" id="gc-pk-offer" hidden style="margin-bottom:1rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+      <i class="fa-solid fa-fingerprint" style="font-size:1.4rem"></i><span style="flex:1;min-width:200px"><b>Sign in with your fingerprint or face next time.</b> Turn it on for this device; your password still works.</span>
+      <button class="btn btn-p btn-s" type="button" id="gc-pk-on">Turn on</button><button class="btn btn-g btn-s" type="button" id="gc-pk-later">Not now</button></div>
+    <p class="msg" id="gc-pk-msg" role="status"></p>
     <div class="atabs" role="tablist">
       ${tab('pending', 'Pending', 'fa-hourglass-half', true)}${tab('approved', 'Approved', 'fa-circle-check')}${tab('rejected', 'Rejected', 'fa-circle-xmark')}${tab('suspended', 'Suspended', 'fa-ban')}${tab('quotes', 'Quote requests', 'fa-paper-plane')}
     </div>

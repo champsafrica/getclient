@@ -207,10 +207,10 @@ export function layout(o) {
 <meta property="og:url" content="${esc(url)}"><meta property="og:image" content="${o.ogImage ? esc(o.ogImage) : SITE.origin + '/og.png'}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${o.ogImage ? esc(o.ogImage) : SITE.origin + '/og.png'}">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="${o.admin ? '/admin/manifest.webmanifest' : '/manifest.webmanifest'}">
 <meta name="theme-color" content="#0B2A6F"><meta name="color-scheme" content="light dark">
 <script>(function(){var t=null;try{t=localStorage.getItem("gc_theme")}catch(e){}var d=t?t==="dark":!!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-theme",d?"dark":"light")})();</script>
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Getclient"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="${o.admin ? 'Getclient Admin' : 'Getclient'}"><meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ${o.turnstile ? '<link rel="preconnect" href="https://challenges.cloudflare.com">' : ''}
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -233,7 +233,8 @@ ${o.turnstile ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api
 <script src="/config.js?v=${v}"></script>
 <script src="/assets/app.js?v=${v}" defer></script>
 <script src="/assets/live.js?v=${v}" defer></script>
-${o.admin ? `<script src="/assets/admin.js?v=${v}" defer></script>` : ''}
+${o.admin ? `<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10.0.0/dist/bundle/index.umd.min.js" defer></script>
+<script src="/assets/admin.js?v=${v}" defer></script>` : ''}
 </body>
 </html>`;
 }

@@ -6,8 +6,7 @@ Blue and white, with a South African accent: the national colours appear only as
 The site is a static build. Listings, ratings, quotes, payments and the reviewer panel all
 run against the existing Supabase project, and the build only **reads** the
 `gc_listings_public` view. The whole database setup is one file, `supabase/schema.sql`: re-runnable,
-it only adds what is missing and never deletes or changes data. It touches only `gc_` objects, so the
-Digitalx Client Portal tables in the same Supabase project are safe.
+it only adds what is missing and never deletes or changes data. The Supabase project is used only by Getclient.
 
 ## Tiers
 
@@ -36,7 +35,7 @@ Do the steps **in this order** (the schema switches off the old direct writes).
    ```bash
    supabase login
    supabase link --project-ref nfdzcjwncbpsruieaxis
-   supabase functions deploy submit-quote submit-listing check-badge gc-mailer
+   supabase functions deploy submit-quote submit-listing check-badge gc-mailer admin-passkey
    ```
 3. **Set the function secrets** in the Supabase dashboard → Edge Functions → Secrets
    (type them there; never paste secrets into chats, tickets or this repo):
@@ -69,6 +68,15 @@ What changes once this is done:
 Reviewers are the users in `gc_admins`; they can read quote requests in `/admin/`. The public key can
 no longer read the `gc_listings` table directly (it used to expose CIPC numbers and contact names);
 the website reads `gc_listings_public` instead.
+
+## Reviewer app (/admin/)
+
+`/admin/` installs as its own app, **Getclient Admin**, with the G icon: Chrome or Android show
+**Install**; on iPhone use Share → Add to Home Screen. After signing in with a password once, a
+reviewer can turn on **fingerprint or face sign-in** for that device (a passkey). The device checks
+the fingerprint or face; the `admin-passkey` edge function verifies the signed challenge and starts
+a normal session. Passkeys work only on getclient.co.za (set `PASSKEY_RP_ID` / `PASSKEY_ORIGINS`
+to test elsewhere). Removing someone from `gc_admins` also stops their fingerprint sign-in.
 
 ## Quick start
 

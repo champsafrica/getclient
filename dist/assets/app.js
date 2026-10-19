@@ -1,6 +1,5 @@
-/*! Getclient app.js — a Digitalx Group project.
- *  Uses supabase-js v2 (loaded in the page head, same pattern as the Digitalx
- *  client portal). Every dynamic feature degrades gracefully: with the database
+/*! Getclient app.js — Developed and Managed by Digitalx.
+ *  Uses supabase-js v2 (loaded in the page head). Every dynamic feature degrades gracefully: with the database
  *  unreachable, the pre-rendered pages stay intact and forms fall back to email.
  */
 (function () {

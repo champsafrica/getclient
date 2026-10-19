@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.gc-mailer]
 verify_jwt = false
+
+[functions.admin-passkey]
+verify_jwt = false

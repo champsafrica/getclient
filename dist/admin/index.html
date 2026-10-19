@@ -14,20 +14,20 @@
 <meta property="og:url" content="https://getclient.co.za/admin/"><meta property="og:image" content="https://getclient.co.za/og.png">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://getclient.co.za/og.png">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/admin/manifest.webmanifest">
 <meta name="theme-color" content="#0B2A6F"><meta name="color-scheme" content="light dark">
 <script>(function(){var t=null;try{t=localStorage.getItem("gc_theme")}catch(e){}var d=t?t==="dark":!!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-theme",d?"dark":"light")})();</script>
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Getclient"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Getclient Admin"><meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="/assets/theme.css?v=f120148897">
+<link rel="stylesheet" href="/assets/theme.css?v=642abae91e">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>if(typeof window.supabase==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></scr'+'ipt>');}</script>
 
 </head>
-<body data-gc-page="" data-gc-cat="" data-gc-city="" data-gc-prov="" data-gc-built="2026-10-19T01:10:46.718Z">
+<body data-gc-page="" data-gc-cat="" data-gc-city="" data-gc-prov="" data-gc-built="2026-10-19T01:26:44.358Z">
 <a class="skip" href="#main">Skip to content</a>
 <div class="ribbon" aria-hidden="true"></div>
 <header class="top"><div class="wrap top-in">
@@ -49,11 +49,19 @@
     <form class="form" id="gc-login-form" style="margin-top:1.2rem">
       <div class="f"><label for="gc-email">Email</label><input id="gc-email" type="email" required autocomplete="username"></div>
       <div class="f"><label for="gc-password">Password</label><input id="gc-password" type="password" required autocomplete="current-password"></div>
-      <button class="btn btn-p btn-blk" type="submit">Sign in</button><p id="gc-login-msg" style="font-size:.85rem;margin:0"></p></form></div></div>
+      <button class="btn btn-p btn-blk" type="submit">Sign in</button><p id="gc-login-msg" style="font-size:.85rem;margin:0"></p></form>
+    <div id="gc-pk-login-box" hidden><div class="or"><span>or</span></div>
+      <button class="btn btn-g btn-blk" type="button" id="gc-pk-login"><i class="fa-solid fa-fingerprint"></i> Sign in with fingerprint or face</button></div>
+    <p class="hint" style="margin:1.2rem 0 0;text-align:center" id="gc-install-hint"><i class="fa-solid fa-mobile-screen"></i> Install this as an app: on Android or Chrome use <b>Install</b>; on iPhone tap <b>Share</b> then <b>Add to Home Screen</b>.</p>
+  </div></div>
 
   <div id="gc-admin-main" hidden>
     <div class="head" style="margin-bottom:1.2rem"><div><p class="eyebrow">Reviewer panel</p><h1 style="font-size:1.8rem;margin:0">Applications</h1></div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap"><input id="gc-admin-q" class="ainput" type="search" placeholder="Search name, ID, email"><button class="btn btn-g btn-s" id="gc-admin-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-g btn-s" id="gc-admin-out">Sign out</button></div></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap"><input id="gc-admin-q" class="ainput" type="search" placeholder="Search name, ID, email"><button class="btn btn-g btn-s" id="gc-admin-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button><button class="btn btn-g btn-s" id="gc-pk-setup" hidden><i class="fa-solid fa-fingerprint"></i> Fingerprint / face</button><button class="btn btn-g btn-s" id="gc-admin-out">Sign out</button></div></div>
+    <div class="note note--ok" id="gc-pk-offer" hidden style="margin-bottom:1rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+      <i class="fa-solid fa-fingerprint" style="font-size:1.4rem"></i><span style="flex:1;min-width:200px"><b>Sign in with your fingerprint or face next time.</b> Turn it on for this device; your password still works.</span>
+      <button class="btn btn-p btn-s" type="button" id="gc-pk-on">Turn on</button><button class="btn btn-g btn-s" type="button" id="gc-pk-later">Not now</button></div>
+    <p class="msg" id="gc-pk-msg" role="status"></p>
     <div class="atabs" role="tablist">
       <button class="atab on" data-status="pending"><i class="fa-solid fa-hourglass-half"></i> Pending <b data-count="pending">–</b></button><button class="atab" data-status="approved"><i class="fa-solid fa-circle-check"></i> Approved <b data-count="approved">–</b></button><button class="atab" data-status="rejected"><i class="fa-solid fa-circle-xmark"></i> Rejected <b data-count="rejected">–</b></button><button class="atab" data-status="suspended"><i class="fa-solid fa-ban"></i> Suspended <b data-count="suspended">–</b></button><button class="atab" data-status="quotes"><i class="fa-solid fa-paper-plane"></i> Quote requests <b data-count="quotes">–</b></button>
     </div>
@@ -82,9 +90,10 @@
 <button class="btn btn-p btn-s" id="gc-install-go">Install</button><button class="x" id="gc-install-x" aria-label="Dismiss">&times;</button></div>
 
 
-<script src="/config.js?v=f120148897"></script>
-<script src="/assets/app.js?v=f120148897" defer></script>
-<script src="/assets/live.js?v=f120148897" defer></script>
-<script src="/assets/admin.js?v=f120148897" defer></script>
+<script src="/config.js?v=642abae91e"></script>
+<script src="/assets/app.js?v=642abae91e" defer></script>
+<script src="/assets/live.js?v=642abae91e" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10.0.0/dist/bundle/index.umd.min.js" defer></script>
+<script src="/assets/admin.js?v=642abae91e" defer></script>
 </body>
 </html>

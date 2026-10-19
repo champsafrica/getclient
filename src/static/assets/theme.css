@@ -718,3 +718,5 @@ img.fit-contain,.feat__img,.prof-gold__cov{background:#fff}
 [data-theme="dark"] .gallery__i{background:var(--mist)}
 [data-theme="dark"] .mega a:hover{background:var(--mist)}
 @media (max-width:700px){.steps-bar--5{grid-template-columns:repeat(5,minmax(0,1fr))}.steps-bar--5 li{font-size:0;justify-content:center;padding:.6rem .3rem}.steps-bar--5 li span{font-size:.8rem}}
+.or{display:flex;align-items:center;gap:.8rem;margin:1rem 0;color:var(--mut2);font-size:.8rem}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
