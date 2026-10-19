@@ -360,7 +360,7 @@
           discount_code: opts.code || null, status: 'pending_verification'
         }).then(function () {
           fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/verify-payment', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseAnonKey, Authorization: 'Bearer ' + CFG.supabaseAnonKey },
             body: JSON.stringify({ reference: res.reference })
           }).catch(function () {});
           opts.onDone && opts.onDone(res.reference);

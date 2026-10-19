@@ -528,8 +528,14 @@ end $$;
 -- attach a completed payment to the listing it paid for
 create or replace function gc_attach_payment(p_reference text, p_listing text)
 returns void language plpgsql security definer set search_path = public as $$
+declare v_plan text; v_paid timestamptz;
 begin
-  update gc_payments set listing_id = p_listing where reference = p_reference and listing_id is null;
+  update gc_payments set listing_id = p_listing where reference = p_reference and listing_id is null
+  returning plan, verified_at into v_plan, v_paid;
+  -- if verify-payment already confirmed it, carry the paid plan onto the listing
+  if v_paid is not null then
+    update gc_listings set paid_plan = v_plan, paid_at = v_paid where public_id = p_listing;
+  end if;
 end $$;
 
 

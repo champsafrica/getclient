@@ -35,7 +35,7 @@ Do the steps **in this order** (the schema switches off the old direct writes).
    ```bash
    supabase login
    supabase link --project-ref nfdzcjwncbpsruieaxis
-   supabase functions deploy submit-quote submit-listing check-badge gc-mailer admin-passkey
+   supabase functions deploy submit-quote submit-listing check-badge gc-mailer admin-passkey verify-payment --use-api --no-verify-jwt
    ```
 3. **Set the function secrets** in the Supabase dashboard → Edge Functions → Secrets
    (type them there; never paste secrets into chats, tickets or this repo):
@@ -47,6 +47,7 @@ Do the steps **in this order** (the schema switches off the old direct writes).
    | `MAIL_FROM` | e.g. `Getclient <info@getclient.co.za>` |
    | `MAIL_CC` | `info@getclient.co.za` (the default) |
    | `MAILER_HOOK_SECRET` | From step 5 |
+   | `PAYSTACK_SECRET_KEY` | Paystack → Settings → API Keys & Webhooks → live **secret** key (confirms payments) |
 4. **Run the schema.** Back up first (Database → Backups, or `supabase db dump`). Then paste
    `supabase/schema.sql` into the SQL editor and run it. The checks at the bottom of the file confirm
    your listings, ratings, photos, quotes and payments are all still there.
