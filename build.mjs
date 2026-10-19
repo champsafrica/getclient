@@ -120,7 +120,7 @@ async function main() {
     add(`/b/${b.slug}/`, D.profile(ctx, b, sizes));
     if (!slugs.has(b.id)) page(`/b/${b.id}/`, D.idRedirect(b));
     out(`verify/${b.id}.json`, JSON.stringify({
-      id: b.id, slug: b.slug, name: b.name, tier: b.tier || 'none', listed: true, url: `/b/${b.slug}/`,
+      id: b.id, slug: b.slug, name: b.name, tier: b.tier || 'none', listed: true, url: `/b/${b.slug}/`, official: !!b.official,
       verified_at: b.verified_at ? String(b.verified_at).slice(0, 10) : null,
       checks: CHECKS.filter(([k]) => b[k]).map(([, , short]) => short),
       generated: now.toISOString().slice(0, 10)

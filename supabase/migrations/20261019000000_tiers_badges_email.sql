@@ -57,15 +57,15 @@ create policy gc_services_read on public.gc_services for select
   using (exists (select 1 from public.gc_listings_public p where p.id = listing_id and p.tier = 'gold'));
 -- Inserts come from submit-listing (service role) or the Supabase dashboard.
 
-insert into public.gc_services (listing_id, name, description, sort)
-select 'gc-000001', s.name, s.descr, s.n
+insert into public.gc_services (listing_id, name, description, price_from, sort)
+select 'gc-000001', s.name, s.descr, s.price, s.n
 from (values
-  (1, 'Company registration', 'CIPC company registration and the compliance that follows, handled for you.'),
-  (2, 'Website design and management', 'Professional websites designed, hosted and kept up to date.'),
-  (3, 'SEO', 'Search engine optimisation so clients find you on Google.'),
-  (4, 'Google Ads', 'Paid search campaigns set up and managed for enquiries, not just clicks.'),
-  (5, 'Mobile and outdoor advertising', 'Billboards, vehicle branding and mobile advertising.')
-) as s(n, name, descr)
+  (1, 'Web development', 'Fast, mobile-first websites and online stores that bring in enquiries.', 'From R3,990'),
+  (2, 'Domains and hosting', 'Domains, hosting, SSL and business email, looked after.', 'From R150/month'),
+  (3, 'Custom software', 'Web apps, portals and dashboards built around your business.', 'Quoted in writing'),
+  (4, 'Company registration', 'Your Pty Ltd registered with CIPC, plus SARS registration and annual returns.', 'From R990'),
+  (5, 'Startup bundles', 'Registration, website, hosting and growth support, packaged together.', 'From R499/month')
+) as s(n, name, descr, price)
 where not exists (select 1 from public.gc_services where listing_id = 'gc-000001');
 
 /* ------------------------------------------------------------------ photos: Blue and Gold only */

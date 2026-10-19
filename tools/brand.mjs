@@ -63,7 +63,7 @@ function sealPoints() {
   }
   return pts.trim();
 }
-const SEAL = { gold: ['#E0A32E', '#B8860B'], blue: ['#5A9BFF', '#1D6FF2'] };
+const SEAL = { gold: ['#E0A32E', '#B8860B'], blue: ['#5A9BFF', '#1D6FF2'], official: ['#829AAB', '#829AAB'] };
 function seal(tier, x = 0, y = 0, s = 32, id = 'g') {
   const [a, b] = SEAL[tier];
   return `<g transform="translate(${x} ${y}) scale(${s / 32})"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">` +
@@ -102,14 +102,14 @@ export function badgeSVG(tier, theme) {
     w = Math.ceil(tx + Math.max(w1, w2) + 18);
     lines = text(F.med, 'Listed on', tx, 22, 11, soft) + text(F.bold, 'Getclient', tx, 40, 17, strong, -0.2);
   } else {
-    const label = tier === 'gold' ? 'Gold Verified' : 'Blue Verified';
+    const label = tier === 'gold' ? 'Gold Verified' : tier === 'official' ? 'Official' : 'Blue Verified';
     const k = 'Listed on Getclient';
     const w1 = measure(F.semi, k, 10.5), w2 = measure(F.bold, label, 15, -0.1);
     w = Math.ceil(tx + Math.max(w1, w2) + 18);
     lines = text(F.semi, k, tx, 21, 10.5, brand) + text(F.bold, label, tx, 38.5, 15, strong, -0.1);
   }
   const iconSvg = tier === 'none' ? mark(pad, (H - icon) / 2 - 1, icon, C.blue, C.white, 14) : seal(tier, pad, (H - icon) / 2 - 1, icon, 's' + tier + theme);
-  const title = tier === 'none' ? 'Listed on Getclient' : `Listed on Getclient — ${tier === 'gold' ? 'Gold' : 'Blue'} Verified`;
+  const title = tier === 'none' ? 'Listed on Getclient' : `Listed on Getclient — ${tier === 'gold' ? 'Gold Verified' : tier === 'official' ? 'Official' : 'Blue Verified'}`;
   return { w, h: H, svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${H}" width="${w}" height="${H}" role="img" aria-label="${title}"><title>${title}</title>` +
     `<defs><clipPath id="pill${tier}${theme}"><rect x="0.75" y="0.75" width="${w - 1.5}" height="${H - 1.5}" rx="${(H - 1.5) / 2}"/></clipPath></defs>` +
     `<rect x="0.75" y="0.75" width="${w - 1.5}" height="${H - 1.5}" rx="${(H - 1.5) / 2}" fill="${bg}" stroke="${stroke}" stroke-width="1.5"/>` +
@@ -159,7 +159,7 @@ async function main() {
   }
 
   // badge images
-  for (const tier of ['none', 'blue', 'gold']) for (const theme of ['light', 'dark']) {
+  for (const tier of ['none', 'blue', 'gold', 'official']) for (const theme of ['light', 'dark']) {
     const name = `assets/badge/${tier === 'none' ? 'listed' : tier}-${theme}`;
     const b = badgeSVG(tier, theme);
     write(name + '.svg', b.svg);

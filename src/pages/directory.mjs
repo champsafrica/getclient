@@ -1,5 +1,5 @@
 import {
-  esc, layout, starButtons, initials, card, feat, listingGrid, crumbs, crumbLD, seal, rating, tierChip, ySvg, flagSvg, avatar,
+  esc, layout, starButtons, initials, mark, tierChipFor, card, feat, listingGrid, crumbs, crumbLD, seal, rating, tierChip, ySvg, flagSvg, avatar,
   loc, cityName, provName, SITE, CATS, CITIES, catBy, cityBy, provBy, isGold, isBlue, isPaid, coverOf, blueChip, promoGold
 } from '../lib.mjs';
 import { PROVINCES, GREETINGS, CHECKS } from '../data/site.mjs';
@@ -63,13 +63,13 @@ export function home(ctx) {
     ${show ? `<div class="hero__card">
       <div class="hero__float"><i class="fa-solid fa-shield-halved"></i><span><b>5 checks</b>on every Gold profile</span></div>
       <div class="rec">
-        <div class="rec__h"><span class="avatar" style="margin:0;width:52px;height:52px;border-radius:15px;font-size:1rem;border:0" aria-hidden="true">${esc(initials(show.name))}</span>
-          <div><b>${esc(show.name)} ${seal(show.tier, 'seal--md')}</b><span>${esc(show.subcategory || '')} · ${esc(cityName(show))}</span></div></div>
+        <div class="rec__h">${avatar(show).replace('class="avatar', 'class="avatar rec__av')}
+          <div><b>${esc(show.name)} ${mark(show, 'seal--md')}</b><span>${esc(show.subcategory || '')} · ${esc(cityName(show))}</span></div></div>
         <p class="rec__k">What a listing tells you</p>
         ${ledger(show)}
         <p class="rec__f">Checks expire after 12 months and are re-run. A lapsed check drops the badge automatically, here and on their own website.</p>
       </div>
-      <div class="hero__badge"><img src="/assets/badge/${show.tier === 'none' ? 'listed' : show.tier}-light.svg" alt="Listed on Getclient badge" width="220"></div>
+      <div class="hero__badge"><img src="/assets/badge/${show.official ? 'official' : show.tier === 'none' ? 'listed' : show.tier}-light.svg" alt="Listed on Getclient badge" width="220"></div>
     </div>` : ''}
   </div>
 </section>
@@ -291,12 +291,12 @@ export function quoteForm(b) {
 }
 
 export const servicesHTML = services => !services || !services.length ? '' :
-  `<div class="svcs">${services.map((s, i) => `<div class="svc"><span class="svc__n">${String(i + 1).padStart(2, '0')}</span><div><b>${esc(s.name)}</b>${s.description ? `<p>${esc(s.description)}</p>` : ''}${s.price_from ? `<span class="svc__p">From ${esc(s.price_from)}</span>` : ''}</div></div>`).join('')}</div>`;
+  `<div class="svcs">${services.map((s, i) => `<div class="svc"><span class="svc__n">${String(i + 1).padStart(2, '0')}</span><div><b>${esc(s.name)}</b>${s.description ? `<p>${esc(s.description)}</p>` : ''}${s.price_from ? `<span class="svc__p">${esc(s.price_from)}</span>` : ''}</div></div>`).join('')}</div>`;
 
 const sponsoredAside = b => {
   const g = promoGold().filter(x => x.id !== b.id).slice(0, 2);
   return !g.length ? '' : `<div class="card adcard"><p class="eyebrow" style="margin-bottom:.6rem">Sponsored · Gold Verified</p>${g.map(x =>
-    `<a class="adcard__i" href="/b/${esc(x.slug)}/">${avatar(x)}<span><b>${esc(x.name)} ${seal('gold', 'seal--sm')}</b><small>${esc(x.tagline || x.subcategory || '')}</small></span></a>`).join('')}</div>`;
+    `<a class="adcard__i" href="/b/${esc(x.slug)}/">${avatar(x)}<span><b>${esc(x.name)} ${mark(x)}</b><small>${esc(x.tagline || x.subcategory || '')}</small></span></a>`).join('')}</div>`;
 };
 
 export function profile(ctx, b, badgeSizes) {
@@ -314,7 +314,7 @@ export function profile(ctx, b, badgeSizes) {
   const year = new Date().getFullYear();
   const since = b.founded ? `${b.founded}${year - b.founded > 0 ? ` (${year - b.founded} year${year - b.founded === 1 ? '' : 's'})` : ''}` : '';
   const verified = b.verified_at ? String(b.verified_at).slice(0, 10) : '';
-  const bimg = paid ? b.tier : 'listed';
+  const bimg = b.official ? 'official' : paid ? b.tier : 'listed';
   const bs = badgeSizes[`${bimg}-light`] || [148, 52];
   const tel = String(b.phone || '').replace(/[^+\d]/g, '');
   const wa = paid ? (b.whatsapp || (tel ? tel.replace(/^\+/, '').replace(/^0/, '27') : '')) : '';
@@ -327,8 +327,8 @@ export function profile(ctx, b, badgeSizes) {
     ? `<section class="prof-h prof-h--gold">${ySvg('prof-h__cov', 'rgba(22,82,240,.5)', 'rgba(143,176,255,.4)')}<div class="wrap">${crumbs(it)}
   <div class="prof-gold">
     <div class="prof-gold__txt">
-      <div class="chips" style="margin-bottom:.8rem">${tierChip(b.tier)}<span class="tier tier--ad">Ad · Sponsored</span></div>
-      <h1>${esc(b.name)}${seal(b.tier, 'seal--lg')}</h1>
+      <div class="chips" style="margin-bottom:.8rem">${tierChipFor(b)}<span class="tier tier--ad">Ad · Sponsored</span></div>
+      <h1>${esc(b.name)}${mark(b, 'seal--lg')}</h1>
       ${b.tagline ? `<p class="lede" style="color:#DCE6FF;margin:.2rem 0 1rem">${esc(b.tagline)}</p>` : ''}
       <div class="prof-h__mt"><span><i class="fa-solid fa-briefcase"></i>${esc(b.subcategory || b.category_name || '')}</span><span><i class="fa-solid fa-location-dot"></i>${esc(loc(b))}</span>
       <span class="rate" data-gc-rating="${esc(b.id)}">${rating(b.avg_rating, b.rating_count)}</span></div>
@@ -339,8 +339,8 @@ export function profile(ctx, b, badgeSizes) {
     : `<section class="prof-h">${cover ? `<div class="prof-h__cov"><img src="${esc(cover)}" alt=""></div>` : ySvg('prof-h__cov', 'rgba(22,82,240,.5)', 'rgba(143,176,255,.4)')}
 <div class="wrap">${crumbs(it)}
   <div class="prof-h__g">${avatar(b)}
-    <div><div class="chips" style="margin-bottom:.6rem">${tierChip(b.tier)}${gold ? '<span class="tier tier--ad">Ad · Sponsored</span>' : ''}</div>
-      <h1>${esc(b.name)}${seal(b.tier, 'seal--lg')}</h1>
+    <div><div class="chips" style="margin-bottom:.6rem">${tierChipFor(b)}${gold ? '<span class="tier tier--ad">Ad · Sponsored</span>' : ''}</div>
+      <h1>${esc(b.name)}${mark(b, 'seal--lg')}</h1>
       <div class="prof-h__mt"><span><i class="fa-solid fa-briefcase"></i>${esc(b.subcategory || b.category_name || '')}</span><span><i class="fa-solid fa-location-dot"></i>${esc(loc(b))}</span>
       <span class="rate" data-gc-rating="${esc(b.id)}">${rating(b.avg_rating, b.rating_count)}</span></div></div>
     <div class="prof-h__acts">${paid ? `<a class="btn btn-p" href="#quote"><i class="fa-solid fa-paper-plane"></i> Request a quote</a>` : ''}${tel ? `<a class="btn ${paid ? 'btn-o' : 'btn-w'}" href="tel:${esc(tel)}"><i class="fa-solid fa-phone"></i> Call</a>` : ''}${!paid && b.email ? `<a class="btn btn-o" href="mailto:${esc(b.email)}"><i class="fa-solid fa-envelope"></i> Email</a>` : ''}${wa ? `<a class="btn btn-o" href="https://wa.me/${esc(wa)}" target="_blank" rel="noopener nofollow"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>` : ''}</div>
@@ -349,7 +349,7 @@ export function profile(ctx, b, badgeSizes) {
   const body = `${hero}
 <section class="sec" style="padding-top:2.6rem"><div class="wrap"><div class="profile">
   <div>
-    ${b.tagline && !(gold && cover) ? `<p class="lede" style="color:var(--ink);font-weight:500;margin-bottom:1.4rem">${esc(b.tagline)}</p>` : ''}
+    ${b.tagline && !(gold && cover) ? `<p class="lede" style="color:var(--head);font-weight:500;margin-bottom:1.4rem">${esc(b.tagline)}</p>` : ''}
     <h2>About</h2><p class="about">${esc(b.description || b.tagline || '')}</p>
     ${gold ? `<h2>Services</h2><div data-gc-services="${esc(b.id)}">${servicesHTML(b.services) || '<p class="mut">Services are being added.</p>'}</div>` : ''}
     ${paid ? `<div id="gc-gallery" data-gc-gallery="${esc(b.id)}"${photos.length ? ' class="gallery"' : ''}>${photos.map(p => `<a class="gallery__i" href="${esc(p)}" target="_blank" rel="noopener"><img src="${esc(p)}" alt="${esc(b.name)}" loading="lazy"${b.cover_fit === 'contain' ? ' class="fit-contain"' : ''}></a>`).join('')}</div>` : ''}

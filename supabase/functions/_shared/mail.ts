@@ -38,7 +38,7 @@ export function shell(title: string, body: string, tier?: string) {
 <tr><td style="padding:8px 28px 24px;font-size:15px;line-height:1.6;color:#33415F">${body}</td></tr>
 <tr><td style="padding:18px 28px;background:#F6F8FF;border-top:1px solid #DCE4F7;font-size:12px;color:#55658C">
 <a href="${ORIGIN}"><img src="${tierBadge(tier)}" alt="Listed on Getclient" height="42" style="display:block;border:0;margin-bottom:10px"></a>
-Getclient, South Africa's verified business directory · a Digitalx Group (Pty) Ltd project · Kuils River, Cape Town<br>
+Getclient, South Africa's verified business directory · Developed and Managed by <a href="https://www.digitalxagency.io" style="color:#1652F0">Digitalx</a><br>
 <a href="mailto:hello@digitalxagency.io" style="color:#1652F0">hello@digitalxagency.io</a> · 021 879 3035</td></tr>
 </table></td></tr></table></body></html>`;
 }

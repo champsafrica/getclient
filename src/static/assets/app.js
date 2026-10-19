@@ -70,6 +70,15 @@
     });
   }
 
+  /* ================================================== light / dark mode */
+  // The page head applies the saved choice (or the device setting) before drawing.
+  var themeBtn = $('#gc-theme');
+  if (themeBtn) themeBtn.addEventListener('click', function () {
+    var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('gc_theme', next); } catch (e) { /* private mode */ }
+  });
+
   /* ================================================== clipboard */
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-copy]');

@@ -207,7 +207,7 @@
         (tel ? '<a class="btn btn-o" href="tel:' + esc(tel) + '">Call</a>' : '') + '</div></div></div></section>' +
 
         '<section class="sec" style="padding-top:2.6rem"><div class="wrap"><div class="profile"><div>' +
-        (b.tagline ? '<p class="lede" style="color:var(--ink);font-weight:500;margin-bottom:1.4rem">' + esc(b.tagline) + '</p>' : '') +
+        (b.tagline ? '<p class="lede" style="color:var(--head);font-weight:500;margin-bottom:1.4rem">' + esc(b.tagline) + '</p>' : '') +
         '<h2>About</h2><p class="about">' + esc(b.description || '') + '</p>' +
         (gold ? '<h2>Services</h2><div data-gc-services="' + esc(b.id) + '"><p class="mut">Services are being added.</p></div>' : '') +
         (paid ? '<div id="gc-gallery" data-gc-gallery="' + esc(b.id) + '"></div>' : '') +
@@ -313,7 +313,7 @@
       if (r.error || !r.data || !r.data.length) return;
       box.innerHTML = '<div class="svcs">' + r.data.map(function (x, i) {
         return '<div class="svc"><span class="svc__n">' + (i < 9 ? '0' : '') + (i + 1) + '</span><div><b>' + esc(x.name) + '</b>' +
-          (x.description ? '<p>' + esc(x.description) + '</p>' : '') + (x.price_from ? '<span class="svc__p">From ' + esc(x.price_from) + '</span>' : '') + '</div></div>';
+          (x.description ? '<p>' + esc(x.description) + '</p>' : '') + (x.price_from ? '<span class="svc__p">' + esc(x.price_from) + '</span>' : '') + '</div></div>';
       }).join('') + '</div>';
     });
   }

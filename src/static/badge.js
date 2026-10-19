@@ -45,7 +45,7 @@
       '<stop offset="1" stop-color="' + b + '"/></linearGradient></defs><polygon points="' + pts.trim() + '" fill="url(#' + id + ')"/>' +
       '<path d="M10.6 16.4l3.6 3.6 7.2-7.4" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   }
-  var ICON = { none: MARK, blue: seal('#5A9BFF', '#1D6FF2', 'gcb'), gold: seal('#E0A32E', '#B8860B', 'gcg') };
+  var ICON = { none: MARK, blue: seal('#5A9BFF', '#1D6FF2', 'gcb'), gold: seal('#E0A32E', '#B8860B', 'gcg'), official: seal('#829AAB', '#829AAB', 'gco') };
 
   function css(o) {
     var dark = o.theme === 'dark', compact = o.size === 'compact';
@@ -73,8 +73,8 @@
   }
 
   function html(o, d) {
-    var tier = d.tier === 'gold' || d.tier === 'blue' ? d.tier : 'none';
-    var label = tier === 'gold' ? 'Gold Verified' : tier === 'blue' ? 'Blue Verified' : '';
+    var tier = d.official ? 'official' : d.tier === 'gold' || d.tier === 'blue' ? d.tier : 'none';
+    var label = tier === 'official' ? 'Official' : tier === 'gold' ? 'Gold Verified' : tier === 'blue' ? 'Blue Verified' : '';
     var url = ORIGIN + (d.url || (o.id ? '/b/' + encodeURIComponent(o.id) + '/' : '/'));
     var title = (d.name ? d.name + ' is listed on Getclient' + (label ? ' — ' + label : '') : 'Listed on Getclient') +
       '. Click to view the verification record.';

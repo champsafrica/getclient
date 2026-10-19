@@ -1,16 +1,18 @@
 {
-  "_about": "Profile content kept in the site build for listings whose data is not in Supabase yet. Keyed by listing ID. Services added in the gc_services table take over from these once they exist.",
+  "_about": "Profile content kept in the site build for listings whose data is not in Supabase yet. Keyed by listing ID. Services added in the gc_services table take over from these once they exist. 'official' marks the business that runs Getclient: it shows a grey tick with its own icon instead of a tier seal.",
   "gc-000001": {
+    "official": true,
+    "logo": "/assets/covers/digitalx-icon.png",
     "cover": "/assets/covers/digitalx.webp",
     "cover_fit": "contain",
     "services": [
-      { "name": "Company registration", "description": "CIPC company registration and the compliance that follows, handled for you." },
-      { "name": "Website design and management", "description": "Professional websites designed, hosted and kept up to date." },
-      { "name": "SEO", "description": "Search engine optimisation so clients find you on Google." },
-      { "name": "Google Ads", "description": "Paid search campaigns set up and managed for enquiries, not just clicks." },
-      { "name": "Mobile and outdoor advertising", "description": "Billboards, vehicle branding and mobile advertising." }
+      { "name": "Web development", "description": "Fast, mobile-first websites and online stores that bring in enquiries.", "price_from": "From R3,990" },
+      { "name": "Domains and hosting", "description": "Domains, hosting, SSL and business email, looked after.", "price_from": "From R150/month" },
+      { "name": "Custom software", "description": "Web apps, portals and dashboards built around your business.", "price_from": "Quoted in writing" },
+      { "name": "Company registration", "description": "Your Pty Ltd registered with CIPC, plus SARS registration and annual returns.", "price_from": "From R990" },
+      { "name": "Startup bundles", "description": "Registration, website, hosting and growth support, packaged together.", "price_from": "From R499/month" }
     ],
-    "phones": [["+27218793035", "021 879 3035", "Cape Town"], ["+27128800270", "012 880 0270", "Pretoria"], ["+27782491129", "078 249 1129", "Mobile"]],
+    "phones": [["+27218793035", "021 879 3035", "Cape Town"], ["+27616521156", "061 652 1156", "Mobile"]],
     "whatsapp": "27218793035",
     "photos": ["/assets/covers/digitalx.webp"]
   }
