@@ -383,7 +383,7 @@ export function admin() {
       <button class="btn btn-p btn-s" type="button" id="gc-pk-on">Turn on</button><button class="btn btn-g btn-s" type="button" id="gc-pk-later">Not now</button></div>
     <p class="msg" id="gc-pk-msg" role="status"></p>
     <div class="atabs" role="tablist">
-      ${tab('pending', 'Pending', 'fa-hourglass-half', true)}${tab('approved', 'Approved', 'fa-circle-check')}${tab('rejected', 'Rejected', 'fa-circle-xmark')}${tab('suspended', 'Suspended', 'fa-ban')}${tab('quotes', 'Quote requests', 'fa-paper-plane')}
+      ${tab('pending', 'Pending', 'fa-hourglass-half', true)}${tab('approved', 'Approved', 'fa-circle-check')}${tab('rejected', 'Rejected', 'fa-circle-xmark')}${tab('suspended', 'Suspended', 'fa-ban')}${tab('quotes', 'Quote requests', 'fa-paper-plane')}${tab('jobs', 'Jobs', 'fa-briefcase')}
     </div>
     <div class="note" id="gc-admin-help" style="margin:1rem 0 1.4rem;font-size:.86rem">
       <b>Pending</b>: check the badge, open the documents, then approve or reject. Approval is blocked until the Listed on Getclient badge is found on the business's website.

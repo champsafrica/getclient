@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My business dashboard | Getclient</title>
+<meta name="description" content="Manage your Getclient listing, answer job offers and see your stats.">
+<link rel="canonical" href="https://getclient.co.za/dashboard/">
+<meta name="robots" content="noindex,follow">
+<meta name="author" content="Digitalx Group (Pty) Ltd">
+<meta name="geo.region" content="ZA-WC"><meta name="geo.placename" content="Cape Town, South Africa">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Getclient"><meta property="og:locale" content="en_ZA">
+<meta property="og:title" content="My business dashboard | Getclient"><meta property="og:description" content="Manage your Getclient listing, answer job offers and see your stats.">
+<meta property="og:url" content="https://getclient.co.za/dashboard/"><meta property="og:image" content="https://getclient.co.za/og.png">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://getclient.co.za/og.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0B2A6F"><meta name="color-scheme" content="light dark">
+<script>(function(){var t=null;try{t=localStorage.getItem("gc_theme")}catch(e){}var d=t?t==="dark":!!(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.setAttribute("data-theme",d?"dark":"light")})();</script>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Getclient"><meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/assets/theme.css?v=92a534efd3">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>if(typeof window.supabase==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></scr'+'ipt>');}</script>
+
+</head>
+<body data-gc-page="" data-gc-cat="" data-gc-city="" data-gc-prov="" data-gc-built="2026-10-25T22:26:49.771Z">
+<a class="skip" href="#main">Skip to content</a>
+<div class="ribbon" aria-hidden="true"></div>
+<header class="top"><div class="wrap top-in">
+<a class="brand" href="/" aria-label="Getclient home"><img class="logo-l" src="/assets/brand/logo.svg" alt="Getclient" width="190" height="38"><img class="logo-d" src="/assets/brand/logo-white.svg" alt="Getclient" width="190" height="38"></a>
+<nav class="nav" aria-label="Main"><a href="/get-quotes/">Get quotes</a><a href="/search/">Find a business</a><a href="/categories/">Categories</a><a href="/pricing/">Pricing</a><a href="/badge/">Get the badge</a><a href="/dashboard/" aria-current="page">My business</a></nav>
+<button class="theme" id="gc-theme" type="button" aria-label="Switch between light and dark mode" title="Light or dark mode"><i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i></button>
+<a class="btn btn-p btn-s btn-top" href="/list/">List your business</a>
+<button class="burger" id="gc-burger" aria-expanded="false" aria-label="Open menu" aria-controls="gc-drawer"><i class="fa-solid fa-bars"></i></button>
+</div></header>
+<div class="drawer" id="gc-drawer"><div class="drawer__top"><img class="logo-l" src="/assets/brand/logo.svg" alt="Getclient"><img class="logo-d" src="/assets/brand/logo-white.svg" alt="Getclient"><button id="gc-close" aria-label="Close menu">&times;</button></div>
+<a href="/get-quotes/">Get quotes</a><a href="/search/">Find a business</a><a href="/categories/">Categories</a><a href="/pricing/">Pricing</a><a href="/badge/">Get the badge</a><a href="/dashboard/">My business</a><a href="/locations/">Locations</a><a href="/how-it-works/">How it works</a><a href="/about/">About</a><a href="/contact/">Contact</a>
+<a class="btn btn-p btn-blk" href="/list/">List your business</a></div>
+
+<main id="main">
+<section class="sec" style="padding-top:2.2rem"><div class="wrap" id="gc-dash">
+  <div id="gc-dash-login"><div class="card" style="max-width:460px;margin-inline:auto;padding:2rem">
+    <img src="/assets/brand/mark.svg" alt="" width="44" height="44" style="margin-bottom:1rem">
+    <h1 style="font-size:1.6rem;margin-bottom:.3rem">Your business on Getclient</h1>
+    <p class="mut" style="font-size:.92rem">Sign in with the email address on your listing. We email you a 6-digit code; no password needed.</p>
+    <form class="form" id="gc-dash-email" style="margin-top:1.2rem">
+      <div class="f"><label for="de">Email on your listing</label><input id="de" type="email" required autocomplete="email"></div>
+      <button class="btn btn-p btn-blk" type="submit">Email me a code</button></form>
+    <form class="form" id="gc-dash-code" hidden style="margin-top:1.2rem">
+      <div class="f"><label for="dc">6-digit code</label><input id="dc" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></div>
+      <button class="btn btn-p btn-blk" type="submit">Sign in</button>
+      <button class="btn btn-g btn-blk" type="button" id="gc-dash-back">Use a different email</button></form>
+    <p class="msg" id="gc-dash-msg" role="status"></p>
+    <p class="hint" style="margin-top:1rem">Not listed yet? <a href="/list/">List your business free</a>.</p>
+  </div></div>
+
+  <div id="gc-dash-app" hidden>
+    <div class="head" style="margin-bottom:1rem"><div><p class="eyebrow">My business</p><h1 style="font-size:1.8rem;margin:0" id="gc-dash-name">…</h1>
+      <div class="chips" style="margin-top:.5rem" id="gc-dash-chips"></div></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center"><select id="gc-dash-pick" hidden class="ainput"></select>
+        <a class="btn btn-g btn-s" id="gc-dash-view" href="#" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> View profile</a>
+        <button class="btn btn-g btn-s" id="gc-dash-out">Sign out</button></div></div>
+    <div class="atabs" role="tablist">
+      <button class="atab on" data-tab="overview"><i class="fa-solid fa-chart-line"></i> Overview<b data-badge="overview" hidden></b></button><button class="atab" data-tab="jobs"><i class="fa-solid fa-briefcase"></i> Job offers<b data-badge="jobs" hidden></b></button><button class="atab" data-tab="quotes"><i class="fa-solid fa-paper-plane"></i> Quote requests<b data-badge="quotes" hidden></b></button>
+      <button class="atab" data-tab="listing"><i class="fa-solid fa-pen"></i> My listing<b data-badge="listing" hidden></b></button><button class="atab" data-tab="services"><i class="fa-solid fa-list-check"></i> Services<b data-badge="services" hidden></b></button><button class="atab" data-tab="photos"><i class="fa-solid fa-image"></i> Photos<b data-badge="photos" hidden></b></button><button class="atab" data-tab="badge"><i class="fa-solid fa-certificate"></i> Badge<b data-badge="badge" hidden></b></button>
+    </div>
+    <div id="gc-dash-body" style="margin-top:1.4rem"></div>
+  </div>
+  <div id="gc-dash-none" hidden class="empty" style="max-width:640px;margin-inline:auto">
+    <h3>No listing uses this email</h3><p>Sign in with the email address on your Getclient listing, or <a href="/list/">list your business</a>. Need help? <a href="mailto:info@getclient.co.za">info@getclient.co.za</a></p>
+    <button class="btn btn-g" id="gc-dash-out2">Sign out</button></div>
+</div></section>
+</main>
+
+<footer class="ftr"><div class="ribbon" aria-hidden="true"></div><div class="wrap">
+<div class="ftr__top">
+  <a href="/" class="ftr__brand" aria-label="Getclient home"><img src="/assets/brand/logo-white.svg" alt="Getclient" width="170" height="34"></a>
+  <nav class="ftr__nav" aria-label="Footer"><a href="/search/">Find a business</a><a href="/categories/">Categories</a><a href="/locations/">Locations</a><a href="/pricing/">Pricing</a><a href="/badge/">Badge</a><a href="/list/">List your business</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>
+</div>
+<div class="ftr__mid">
+  <span><a href="tel:+27218793035">021 879 3035</a> · <a href="mailto:info@getclient.co.za">info@getclient.co.za</a> · <a href="https://wa.me/27218793035" target="_blank" rel="noopener">WhatsApp</a></span>
+  <span class="soc"><a href="https://x.com/digitalxio" target="_blank" rel="noopener" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a><a href="https://tiktok.com/@digitalxio" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a><a href="https://facebook.com/digitalxio" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a><a href="https://instagram.com/digitalxagencyio" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a><a href="https://threads.net/@digitalxagencyio" target="_blank" rel="noopener" aria-label="Threads"><i class="fa-brands fa-threads"></i></a><a href="https://wa.me/27218793035" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></span>
+</div>
+<div class="ftr__b"><span>© 2026 Getclient · Developed and Managed by <a href="https://www.digitalxagency.io" target="_blank" rel="noopener">Digitalx</a> · <svg class="ftr__flag" viewBox="0 0 36 24" aria-hidden="true" focusable="false"><defs><clipPath id="fc"><rect width="36" height="24"/></clipPath></defs><g clip-path="url(#fc)"><rect width="36" height="12" fill="#E03C31"/><rect y="12" width="36" height="12" fill="#001489"/><path d="M0 0 L13 12 L0 24 M13 12 H36" stroke="#fff" stroke-width="8" fill="none"/><path d="M0 0 L0 24 L13 12 Z" fill="#FFB81C"/><path d="M0 0 L13 12 L0 24 M13 12 H36" stroke="#007749" stroke-width="4.8" fill="none"/><path d="M0 4.9 L0 19.1 L7.7 12 Z" fill="#000"/></g></svg> Built in South Africa</span>
+<span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · <a href="/sitemap.xml">Sitemap</a></span></div>
+</div></footer>
+<div class="install" id="gc-install" role="dialog" aria-label="Install Getclient"><img src="/assets/brand/icon-192.png" alt="">
+<div style="flex:1"><b>Install Getclient</b><span>Add it to your home screen for offline browsing.</span></div>
+<button class="btn btn-p btn-s" id="gc-install-go">Install</button><button class="x" id="gc-install-x" aria-label="Dismiss">&times;</button></div>
+
+
+<script src="/config.js?v=92a534efd3"></script>
+<script src="/assets/app.js?v=92a534efd3" defer></script>
+<script src="/assets/live.js?v=92a534efd3" defer></script>
+<script src="/assets/dashboard.js?v=92a534efd3" defer></script>
+
+</body>
+</html>

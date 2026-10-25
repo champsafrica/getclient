@@ -992,7 +992,7 @@
       var tier = el.tier.value, theme = el.theme.value, size = el.size.value, layout = el.layout.value;
       var slug = (el.slug.value || '').trim();
       var label = tier === 'gold' ? 'Gold Verified' : tier === 'blue' ? 'Blue Verified' : '';
-      var url = 'https://getclient.co.za/b/' + (slug || id) + '/';
+      var url = 'https://getclient.co.za/b/' + (slug || id) + '/?ref=badge';
       var img = (tier === 'none' ? 'listed' : tier) + '-' + theme;
       var alt = 'Listed on Getclient' + (label ? ' — ' + label : '');
       var title = name + ' is listed on Getclient' + (label ? ', ' + label : '');

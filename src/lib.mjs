@@ -140,8 +140,8 @@ export function promoBlock() {
 /* ---------- chrome ---------- */
 // One flat row of links. No dropdowns.
 const NAV = [
-  ['/search/', 'Find a business'], ['/categories/', 'Categories'], ['/locations/', 'Locations'],
-  ['/pricing/', 'Pricing'], ['/badge/', 'Get the badge']
+  ['/get-quotes/', 'Get quotes'], ['/search/', 'Find a business'], ['/categories/', 'Categories'],
+  ['/pricing/', 'Pricing'], ['/badge/', 'Get the badge'], ['/dashboard/', 'My business']
 ];
 
 function header(path) {
@@ -156,7 +156,7 @@ function header(path) {
 <button class="burger" id="gc-burger" aria-expanded="false" aria-label="Open menu" aria-controls="gc-drawer"><i class="fa-solid fa-bars"></i></button>
 </div></header>
 <div class="drawer" id="gc-drawer"><div class="drawer__top"><img class="logo-l" src="/assets/brand/logo.svg" alt="Getclient"><img class="logo-d" src="/assets/brand/logo-white.svg" alt="Getclient"><button id="gc-close" aria-label="Close menu">&times;</button></div>
-${NAV.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}<a href="/how-it-works/">How it works</a><a href="/about/">About</a><a href="/contact/">Contact</a>
+${NAV.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}<a href="/locations/">Locations</a><a href="/how-it-works/">How it works</a><a href="/about/">About</a><a href="/contact/">Contact</a>
 <a class="btn btn-p btn-blk" href="/list/">List your business</a></div>`;
 }
 
@@ -233,6 +233,7 @@ ${o.turnstile ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api
 <script src="/config.js?v=${v}"></script>
 <script src="/assets/app.js?v=${v}" defer></script>
 <script src="/assets/live.js?v=${v}" defer></script>
+${(o.scripts || []).map(x => `<script src="/assets/${x}?v=${v}" defer></script>`).join('')}
 ${o.admin ? `<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10.0.0/dist/bundle/index.umd.min.js" defer></script>
 <script src="/assets/admin.js?v=${v}" defer></script>` : ''}
 </body>

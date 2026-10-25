@@ -75,7 +75,7 @@
   function html(o, d) {
     var tier = d.official ? 'official' : d.tier === 'gold' || d.tier === 'blue' ? d.tier : 'none';
     var label = tier === 'official' ? 'Official' : tier === 'gold' ? 'Gold Verified' : tier === 'blue' ? 'Blue Verified' : '';
-    var url = ORIGIN + (d.url || (o.id ? '/b/' + encodeURIComponent(o.id) + '/' : '/'));
+    var url = ORIGIN + (d.url || (o.id ? '/b/' + encodeURIComponent(o.id) + '/' : '/')) + (d.url || o.id ? '?ref=badge' : '');
     var title = (d.name ? d.name + ' is listed on Getclient' + (label ? ' — ' + label : '') : 'Listed on Getclient') +
       '. Click to view the verification record.';
     var text;

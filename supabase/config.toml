@@ -17,3 +17,15 @@ verify_jwt = false
 
 [functions.verify-payment]
 verify_jwt = false
+
+[functions.submit-job]
+verify_jwt = false
+
+[functions.lead]
+verify_jwt = false
+
+[functions.job-status]
+verify_jwt = false
+
+[functions.whatsapp]
+verify_jwt = false

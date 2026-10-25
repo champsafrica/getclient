@@ -720,3 +720,32 @@ img.fit-contain,.feat__img,.prof-gold__cov{background:#fff}
 @media (max-width:700px){.steps-bar--5{grid-template-columns:repeat(5,minmax(0,1fr))}.steps-bar--5 li{font-size:0;justify-content:center;padding:.6rem .3rem}.steps-bar--5 li span{font-size:.8rem}}
 .or{display:flex;align-items:center;gap:.8rem;margin:1rem 0;color:var(--mut2);font-size:.8rem}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ================= get quotes, job status, lead pages ================= */
+.quote-g{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:2rem;align-items:start}
+.quote-how{display:grid;gap:1rem;position:sticky;top:92px}
+@media (max-width:900px){.quote-g{grid-template-columns:minmax(0,1fr)}.quote-how{position:static}}
+.flabel{font-size:.86rem;font-weight:600;color:var(--head)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
+.seg label{cursor:pointer}
+.seg input{position:absolute;opacity:0}
+.seg span{display:block;text-align:center;padding:.7rem .4rem;border:1.5px solid var(--line);border-radius:12px;font-size:.88rem;font-weight:500;color:var(--navy-t);background:var(--card)}
+.seg input:checked+span{border-color:var(--blue);background:var(--blue);color:#fff}
+.seg input:focus-visible+span{outline:3px solid var(--blue-300)}
+@media (max-width:560px){.seg{grid-template-columns:1fr 1fr}}
+.wa-cta{display:flex;gap:.9rem;align-items:center}
+.wa-cta i{font-size:1.8rem;color:#25D366}
+.wa-cta b{display:block;color:var(--head)}
+.wa-cta small{color:var(--mut)}
+.mbiz__h b{display:flex;align-items:center;gap:.35rem;font-size:1.05rem;color:var(--head)}
+.mbiz__h span{display:block;font-size:.84rem}
+.mbiz__a{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem}
+.lead-acts{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:1.2rem;padding-top:1rem;border-top:1px dashed var(--line)}
+.lead-dec{display:flex;gap:.5rem;flex-wrap:wrap}
+.lead-dec .ainput{min-width:0}
+.cta-quotes{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:1.2rem 1.4rem;border-radius:var(--r-lg);background:var(--mist);border:1px solid var(--line)}
+.cta-quotes b{color:var(--head)}
+.cta-quotes span{color:var(--mut);font-size:.92rem}
+.atab b[data-badge]{background:var(--err);color:#fff}
+.hero-quotes{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:1.1rem 0 0}
+.hero-quotes span{color:#9FB3E6;font-size:.84rem}

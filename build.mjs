@@ -12,6 +12,7 @@ import { setBuild, setPromo, esc, photoURL, SITE, CATS, CITIES } from './src/lib
 import { PROVINCES, CHECKS } from './src/data/site.mjs';
 import * as D from './src/pages/directory.mjs';
 import * as P from './src/pages/content.mjs';
+import * as J from './src/pages/jobs.mjs';
 
 const ROOT = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'));
 const DIST = path.join(ROOT, 'dist');
@@ -110,6 +111,10 @@ async function main() {
   add('/privacy/', P.privacy());
   add('/terms/', P.terms());
   page('/admin/', P.admin());
+  add('/get-quotes/', J.getQuotes());
+  page('/job/', J.jobPage());
+  page('/lead/', J.leadPage());
+  page('/dashboard/', J.dashboard());
   page('/404.html', P.notFound());
   page('/offline.html', P.offline());
   page('/b/profile.html', D.dynProfile());

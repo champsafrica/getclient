@@ -3,7 +3,7 @@
  *  new cache and the old one is deleted on activate. This is what stops a stale
  *  app.js or live.js being pinned on a returning visitor's machine.
  */
-const BUILD = '7e3bdac41b';
+const BUILD = '92a534efd3';
 const CACHE = 'getclient-' + BUILD;
 const SHELL = ['/offline.html', '/logo.png', '/manifest.webmanifest', '/assets/brand/logo.svg', '/favicon.svg'];
 
@@ -32,7 +32,8 @@ self.addEventListener('fetch', e => {
 
   // never cache the database, the reviewer panel, or verification records
   if (url.hostname.endsWith('supabase.co') ||
-      url.pathname.startsWith('/admin') ||
+      url.pathname.startsWith('/admin') || url.pathname.startsWith('/dashboard') ||
+      url.pathname.startsWith('/job/') || url.pathname.startsWith('/lead/') ||
       url.pathname.startsWith('/verify/') ||
       url.pathname === '/config.js') return;
 

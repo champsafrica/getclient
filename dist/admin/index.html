@@ -22,23 +22,23 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="/assets/theme.css?v=7e3bdac41b">
+<link rel="stylesheet" href="/assets/theme.css?v=92a534efd3">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>if(typeof window.supabase==='undefined'){document.write('<scr'+'ipt src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></scr'+'ipt>');}</script>
 
 </head>
-<body data-gc-page="" data-gc-cat="" data-gc-city="" data-gc-prov="" data-gc-built="2026-10-19T01:57:28.844Z">
+<body data-gc-page="" data-gc-cat="" data-gc-city="" data-gc-prov="" data-gc-built="2026-10-25T22:26:49.771Z">
 <a class="skip" href="#main">Skip to content</a>
 <div class="ribbon" aria-hidden="true"></div>
 <header class="top"><div class="wrap top-in">
 <a class="brand" href="/" aria-label="Getclient home"><img class="logo-l" src="/assets/brand/logo.svg" alt="Getclient" width="190" height="38"><img class="logo-d" src="/assets/brand/logo-white.svg" alt="Getclient" width="190" height="38"></a>
-<nav class="nav" aria-label="Main"><a href="/search/">Find a business</a><a href="/categories/">Categories</a><a href="/locations/">Locations</a><a href="/pricing/">Pricing</a><a href="/badge/">Get the badge</a></nav>
+<nav class="nav" aria-label="Main"><a href="/get-quotes/">Get quotes</a><a href="/search/">Find a business</a><a href="/categories/">Categories</a><a href="/pricing/">Pricing</a><a href="/badge/">Get the badge</a><a href="/dashboard/">My business</a></nav>
 <button class="theme" id="gc-theme" type="button" aria-label="Switch between light and dark mode" title="Light or dark mode"><i class="fa-solid fa-moon"></i><i class="fa-solid fa-sun"></i></button>
 <a class="btn btn-p btn-s btn-top" href="/list/">List your business</a>
 <button class="burger" id="gc-burger" aria-expanded="false" aria-label="Open menu" aria-controls="gc-drawer"><i class="fa-solid fa-bars"></i></button>
 </div></header>
 <div class="drawer" id="gc-drawer"><div class="drawer__top"><img class="logo-l" src="/assets/brand/logo.svg" alt="Getclient"><img class="logo-d" src="/assets/brand/logo-white.svg" alt="Getclient"><button id="gc-close" aria-label="Close menu">&times;</button></div>
-<a href="/search/">Find a business</a><a href="/categories/">Categories</a><a href="/locations/">Locations</a><a href="/pricing/">Pricing</a><a href="/badge/">Get the badge</a><a href="/how-it-works/">How it works</a><a href="/about/">About</a><a href="/contact/">Contact</a>
+<a href="/get-quotes/">Get quotes</a><a href="/search/">Find a business</a><a href="/categories/">Categories</a><a href="/pricing/">Pricing</a><a href="/badge/">Get the badge</a><a href="/dashboard/">My business</a><a href="/locations/">Locations</a><a href="/how-it-works/">How it works</a><a href="/about/">About</a><a href="/contact/">Contact</a>
 <a class="btn btn-p btn-blk" href="/list/">List your business</a></div>
 
 <main id="main">
@@ -63,7 +63,7 @@
       <button class="btn btn-p btn-s" type="button" id="gc-pk-on">Turn on</button><button class="btn btn-g btn-s" type="button" id="gc-pk-later">Not now</button></div>
     <p class="msg" id="gc-pk-msg" role="status"></p>
     <div class="atabs" role="tablist">
-      <button class="atab on" data-status="pending"><i class="fa-solid fa-hourglass-half"></i> Pending <b data-count="pending">–</b></button><button class="atab" data-status="approved"><i class="fa-solid fa-circle-check"></i> Approved <b data-count="approved">–</b></button><button class="atab" data-status="rejected"><i class="fa-solid fa-circle-xmark"></i> Rejected <b data-count="rejected">–</b></button><button class="atab" data-status="suspended"><i class="fa-solid fa-ban"></i> Suspended <b data-count="suspended">–</b></button><button class="atab" data-status="quotes"><i class="fa-solid fa-paper-plane"></i> Quote requests <b data-count="quotes">–</b></button>
+      <button class="atab on" data-status="pending"><i class="fa-solid fa-hourglass-half"></i> Pending <b data-count="pending">–</b></button><button class="atab" data-status="approved"><i class="fa-solid fa-circle-check"></i> Approved <b data-count="approved">–</b></button><button class="atab" data-status="rejected"><i class="fa-solid fa-circle-xmark"></i> Rejected <b data-count="rejected">–</b></button><button class="atab" data-status="suspended"><i class="fa-solid fa-ban"></i> Suspended <b data-count="suspended">–</b></button><button class="atab" data-status="quotes"><i class="fa-solid fa-paper-plane"></i> Quote requests <b data-count="quotes">–</b></button><button class="atab" data-status="jobs"><i class="fa-solid fa-briefcase"></i> Jobs <b data-count="jobs">–</b></button>
     </div>
     <div class="note" id="gc-admin-help" style="margin:1rem 0 1.4rem;font-size:.86rem">
       <b>Pending</b>: check the badge, open the documents, then approve or reject. Approval is blocked until the Listed on Getclient badge is found on the business's website.
@@ -90,10 +90,11 @@
 <button class="btn btn-p btn-s" id="gc-install-go">Install</button><button class="x" id="gc-install-x" aria-label="Dismiss">&times;</button></div>
 
 
-<script src="/config.js?v=7e3bdac41b"></script>
-<script src="/assets/app.js?v=7e3bdac41b" defer></script>
-<script src="/assets/live.js?v=7e3bdac41b" defer></script>
+<script src="/config.js?v=92a534efd3"></script>
+<script src="/assets/app.js?v=92a534efd3" defer></script>
+<script src="/assets/live.js?v=92a534efd3" defer></script>
+
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@10.0.0/dist/bundle/index.umd.min.js" defer></script>
-<script src="/assets/admin.js?v=7e3bdac41b" defer></script>
+<script src="/assets/admin.js?v=92a534efd3" defer></script>
 </body>
 </html>

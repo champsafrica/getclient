@@ -35,7 +35,7 @@ Do the steps **in this order** (the schema switches off the old direct writes).
    ```bash
    supabase login
    supabase link --project-ref nfdzcjwncbpsruieaxis
-   supabase functions deploy submit-quote submit-listing check-badge gc-mailer admin-passkey verify-payment --use-api --no-verify-jwt
+   supabase functions deploy submit-quote submit-listing check-badge gc-mailer admin-passkey verify-payment submit-job lead job-status whatsapp --use-api --no-verify-jwt
    ```
 3. **Set the function secrets** in the Supabase dashboard → Edge Functions → Secrets
    (type them there; never paste secrets into chats, tickets or this repo):
@@ -78,6 +78,69 @@ reviewer can turn on **fingerprint or face sign-in** for that device (a passkey)
 the fingerprint or face; the `admin-passkey` edge function verifies the signed challenge and starts
 a normal session. Passkeys work only on getclient.co.za (set `PASSKEY_RP_ID` / `PASSKEY_ORIGINS`
 to test elsewhere). Removing someone from `gc_admins` also stops their fingerprint sign-in.
+
+## Smart quote matching (/get-quotes/)
+
+A client describes a job once (website or WhatsApp). `gc_match_job()` offers it to up to three
+businesses at a time, chosen by these rules, in order:
+
+1. **Hard filters:** approved Blue or Gold, same category, same town, or the same province when the
+   town has fewer than three; has an email; never offered this job before.
+2. **Accuracy:** if any business genuinely matches the service asked for (speciality, services or
+   summary), only matching businesses are offered it. Loose matches are used only when nothing
+   matches at all, and the business sees "possible match".
+3. **Ranking:** same town before nearby, Gold before Blue, response rate, rating, fewest leads this
+   week, then a stable tiebreak.
+4. **The business confirms:** it accepts or declines from a one-click email link or the dashboard. The
+   client's contact details are released only on acceptance. Declines and unanswered offers
+   (4 hours for urgent jobs, 24 hours this week, 48 hours otherwise) pass to the next best match.
+   `gc_lead_sweep()` runs every 10 minutes through pg_cron.
+
+Every rule is covered by the database tests (52 checks). Response rate on profiles now counts job
+offers answered as well as quote requests.
+
+## Business owner dashboard (/dashboard/)
+
+Owners sign in with a 6-digit code emailed to the address on their listing (Supabase email OTP).
+`gc_claim_listings()` links them to every listing with that confirmed email. They can see 30-day
+stats (profile views, badge clicks, website and phone clicks, job offers, quote requests, response
+rate, and how their tier compares in their category), answer job offers, mark quote requests as
+replied, edit their listing, manage services (Blue 8, Gold 12) and photos (Blue 6, Gold 20), and
+check their badge. All changes go through `gc_owner_*` functions that check ownership and tier rules.
+
+**Setup (Supabase dashboard):**
+- **Authentication → Providers → Email:** keep Email enabled.
+- **Authentication → Emails → SMTP Settings:** turn on custom SMTP with Resend. Host `smtp.resend.com`,
+  port `465`, user `resend`, password = your Resend API key, sender `info@getclient.co.za`. Without
+  this, Supabase's built-in email sends only a few sign-in codes an hour.
+- **Authentication → Emails → Templates → Magic Link:** include the code, e.g.
+  `<p>Your Getclient sign-in code is <b>{{ .Token }}</b></p><p>Or <a href="{{ .ConfirmationURL }}">sign in with this link</a>.</p>`
+- **Authentication → URL Configuration:** Site URL `https://getclient.co.za`; add
+  `https://getclient.co.za/dashboard/` to Redirect URLs.
+- **Database → Extensions:** enable **pg_cron** (before running `supabase/schema.sql`), so unanswered
+  job offers move on automatically.
+
+## WhatsApp (sign up and get quotes)
+
+People message the Getclient WhatsApp number. Reply **1** lists a business (free Basic; the badge
+must still be on their website), **2** posts a job into the same matching as the website, and **3**
+gives contact details. Businesses also get new job offers on WhatsApp, and clients who asked
+on WhatsApp get the replies there.
+
+**Setup (Meta):**
+1. In [Meta for Developers](https://developers.facebook.com) create an app of type **Business**, add
+   **WhatsApp**, and connect the Getclient number. The number must not be in use on the WhatsApp app.
+2. Create a **System User** in Meta Business Settings with a **permanent token** that has
+   `whatsapp_business_messaging`. Note the **Phone number ID** and the app's **App secret**.
+3. Add these as Supabase function secrets: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
+   `WHATSAPP_APP_SECRET`, and `WHATSAPP_VERIFY_TOKEN` (any long random text you make up).
+4. In the app's WhatsApp → **Configuration**, set the webhook URL to
+   `https://nfdzcjwncbpsruieaxis.supabase.co/functions/v1/whatsapp`, the verify token to the same
+   `WHATSAPP_VERIFY_TOKEN`, and subscribe to **messages**.
+5. Optional but recommended: create a **Utility** message template, e.g. `getclient_update`, with the
+   body `{{1}}`. Once Meta approves it, add `WHATSAPP_TEMPLATE_UPDATE=getclient_update`. WhatsApp only
+   allows free-form messages within 24 hours of the person's last message, and this template
+   covers the rest (for example, a business accepting the next day).
 
 ## Quick start
 

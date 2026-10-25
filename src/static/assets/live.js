@@ -319,6 +319,31 @@
   }
   $$('[data-gc-services]').forEach(function (n) { loadServices(n.getAttribute('data-gc-services')); });
 
+  /* ============================================ 2b. owner stats: views and clicks */
+  // Counted once per visitor per day by gc_track(); shown in the business dashboard.
+  (function track() {
+    if (page !== 'profile') return;
+    var tries = 0;
+    (function wait() {
+      var el = $('[data-gc-rater]');
+      if (!el) { if (++tries < 20) setTimeout(wait, 300); return; }      // dynamic profiles render later
+      var id = el.getAttribute('data-gc-rater');
+      var send = function (kind) { sb.rpc('gc_track', { p_listing: id, p_kind: kind }).then(function () {}, function () {}); };
+      var key = 'gc_seen_' + id + '_' + new Date().toISOString().slice(0, 10);
+      var seen = null; try { seen = sessionStorage.getItem(key); sessionStorage.setItem(key, '1'); } catch (e) { /* private mode */ }
+      if (!seen) send(/[?&]ref=badge/.test(location.search) ? 'badge_click' : 'view');
+      if (!seen && /[?&]ref=badge/.test(location.search)) send('view');
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest('a[href]');
+        if (!a || !a.closest('main')) return;
+        var h = a.getAttribute('href') || '';
+        if (/^tel:/.test(h)) send('phone_click');
+        else if (/wa\.me\/(?!\?)/.test(h)) send('whatsapp_click');
+        else if (a.getAttribute('rel') && /nofollow/.test(a.getAttribute('rel')) && /^https?:/.test(h) && !/wa\.me|facebook|x\.com|linkedin/.test(h)) send('website_click');
+      });
+    })();
+  })();
+
   /* ============================================ 3. Paystack for paid plans */
 
   window.GCPay = function (opts) {

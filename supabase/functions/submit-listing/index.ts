@@ -6,7 +6,7 @@ import { cors, json, clientIp, clean } from '../_shared/http.ts';
 import { verifyTurnstile } from '../_shared/turnstile.ts';
 import { admin } from '../_shared/db.ts';
 import { checkBadge } from '../_shared/badge.ts';
-import { send, shell, esc, button, badgeCode, ORIGIN, PLAN_NAME } from '../_shared/mail.ts';
+import { sendWelcome } from '../_shared/mail.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors(req) });
@@ -53,20 +53,7 @@ Deno.serve(async (req) => {
 
   const to = clean(p.email, 200);
   if (to) {
-    const name = clean(p.name, 120);
-    await send({
-      to, subject: `Welcome to Getclient, ${name}`,
-      html: shell('Welcome to Getclient',
-        `<p>Hi ${esc(clean(p.contact_name, 120) || name)},</p>
-         <p>Thank you for listing <b>${esc(name)}</b> on Getclient. Your application for a
-         <b>${PLAN_NAME[plan] || 'listing'}</b> is in. Your listing ID is <b>${esc(id)}</b>.</p>
-         <p>A person reviews every submission, usually within one to two business days. We will email you as soon as it is approved.</p>
-         <p><b>Your badge.</b> ${badge.found ? 'We found the Listed on Getclient badge on your website. Thank you.'
-           : 'We could not find the badge on your website yet. Your listing cannot be approved until it is there.'}
-         Keep this code on your site. Once you are approved it shows your tier and links visitors to your profile:</p>
-         ${badgeCode(id)}
-         ${button(`${ORIGIN}/badge/?id=${encodeURIComponent(id)}`, 'See all badge styles')}`, plan),
-    });
+    await sendWelcome({ to, name: clean(p.name, 120), contact: clean(p.contact_name, 120), plan, id, badgeFound: badge.found });
   }
   return json(req, { public_id: id, badge_found: badge.found });
 });

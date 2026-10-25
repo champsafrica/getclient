@@ -3,6 +3,9 @@ Allow: /
 Disallow: /admin/
 Disallow: /search/
 Disallow: /verify/
+Disallow: /job/
+Disallow: /lead/
+Disallow: /dashboard/
 Disallow: /*?
 
 Sitemap: https://getclient.co.za/sitemap.xml

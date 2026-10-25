@@ -235,6 +235,83 @@ create table if not exists gc_passkey_challenges (
   created_at timestamptz not null default now()
 );
 
+-- ------------------------------------------------- smart quote matching
+-- A client posts one job; it is offered to up to three verified businesses at a
+-- time. A business sees the job, then accepts or declines; the client's contact
+-- details are released only on acceptance. Declined and unanswered offers pass
+-- to the next best match automatically.
+create table if not exists gc_jobs (
+  id                uuid primary key default gen_random_uuid(),
+  ref               text unique not null default 'J-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 7)),
+  category          text not null references gc_categories(slug),
+  city              text not null references gc_locations(slug),
+  service           text not null check (char_length(service) between 2 and 80),
+  details           text not null check (char_length(details) between 20 and 2000),
+  timing            text not null check (timing in ('urgent', 'week', 'month', 'flexible')),
+  budget            text check (char_length(budget) <= 60),
+  client_name       text not null check (char_length(client_name) between 2 and 120),
+  client_email      text,
+  client_phone      text,
+  consent           boolean not null default false,
+  source            text not null default 'web' check (source in ('web', 'whatsapp')),
+  client_token_hash text not null,
+  status            text not null default 'matching' check (status in ('matching', 'matched', 'no_match', 'closed')),
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  closed_at         timestamptz,
+  check (client_email is not null or client_phone is not null)
+);
+create index if not exists gc_jobs_status on gc_jobs(status, created_at desc);
+create index if not exists gc_jobs_email  on gc_jobs(lower(client_email), created_at desc);
+
+create table if not exists gc_leads (
+  id             uuid primary key default gen_random_uuid(),
+  job_id         uuid not null references gc_jobs(id) on delete cascade,
+  listing_id     text not null references gc_listings(public_id) on delete cascade on update cascade,
+  rank           int  not null,
+  nearby         boolean not null default false,    -- same province, not the same town
+  relevance      real not null default 0,           -- 0..1 match between the job and the business's services
+  status         text not null default 'offered' check (status in ('offered', 'accepted', 'declined', 'expired', 'withdrawn')),
+  token_hash     text not null unique,
+  offered_at     timestamptz not null default now(),
+  expires_at     timestamptz not null,
+  responded_at   timestamptz,
+  decline_reason text check (char_length(decline_reason) <= 200),
+  unique (job_id, listing_id)                       -- never offered to the same business twice
+);
+create index if not exists gc_leads_listing on gc_leads(listing_id, offered_at desc);
+create index if not exists gc_leads_open    on gc_leads(status, expires_at) where status = 'offered';
+
+-- ------------------------------------------------- business owners
+-- An owner is linked to a listing by proving they control the listing's email.
+create table if not exists gc_owners (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  listing_id text not null references gc_listings(public_id) on delete cascade on update cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, listing_id)
+);
+
+-- profile views and badge clicks, one row per visitor per listing per day
+create table if not exists gc_events (
+  listing_id text not null references gc_listings(public_id) on delete cascade on update cascade,
+  kind       text not null check (kind in ('view', 'badge_click', 'website_click', 'phone_click', 'whatsapp_click')),
+  day        date not null default current_date,
+  visitor    text not null,
+  primary key (listing_id, kind, day, visitor)
+);
+
+-- ------------------------------------------------- WhatsApp sign-up
+create table if not exists gc_wa_sessions (
+  phone      text primary key,
+  step       text not null default 'start',
+  data       jsonb not null default '{}',
+  updated_at timestamptz not null default now()
+);
+create table if not exists gc_wa_seen (
+  message_id text primary key,
+  created_at timestamptz not null default now()
+);
+
 -- Child keys follow a renamed public_id (re-pointed in case an older table
 -- was created without ON UPDATE CASCADE). Data is not touched.
 alter table gc_ratings  drop constraint if exists gc_ratings_listing_id_fkey;
@@ -578,9 +655,12 @@ select
   lower(l.name || ' ' || coalesce(l.tagline,'') || ' ' || l.description || ' ' || coalesce(l.subcategory,'')) as search_text,
   r.avg_rating, coalesce(r.rating_count, 0) as rating_count,
   (select p.path from gc_photos p where p.listing_id = l.public_id order by p.sort limit 1) as cover_photo,
-  (select case when count(*) = 0 then null
-          else round(100.0 * count(*) filter (where responded_at is not null) / count(*)) end
-     from gc_quotes q where q.business_id = l.public_id) as response_rate,
+  -- share of quote requests and job offers the business answered (an expired offer counts as no answer)
+  (select case when count(*) = 0 then null else round(100.0 * count(*) filter (where answered) / count(*)) end
+     from (select q.responded_at is not null as answered from gc_quotes q where q.business_id = l.public_id
+           union all
+           select ld.status in ('accepted', 'declined') from gc_leads ld
+            where ld.listing_id = l.public_id and ld.status in ('accepted', 'declined', 'expired')) x) as response_rate,
   l.created_at
 from gc_listings l
 left join gc_categories c      on c.slug = l.category
@@ -754,6 +834,396 @@ revoke all on function gc_redeem(text)                  from public;
 grant execute on function gc_redeem(text)               to service_role;
 revoke all on function gc_submit_listing(jsonb)         from public, anon, authenticated;
 grant execute on function gc_submit_listing(jsonb)      to service_role;
+
+
+-- ===================================================================== smart quote matching
+-- Sends an event to the gc-mailer edge function (emails, WhatsApp).
+create or replace function gc_notify(p_event text, p_payload jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare u text; s text;
+begin
+  select value into u from gc_private_settings where key = 'mailer_url';
+  select value into s from gc_private_settings where key = 'mailer_hook_secret';
+  if u is null then return; end if;
+  perform net.http_post(
+    url := u,
+    body := jsonb_build_object('event', p_event) || coalesce(p_payload, '{}'::jsonb),
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-gc-hook', s)
+  );
+end $$;
+
+-- 64 hex characters from two random UUIDs; only its hash is ever stored
+create or replace function gc_new_token() returns text language sql volatile as $$
+  select replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
+$$;
+create or replace function gc_token_hash(p text) returns text language sql immutable as $$
+  select encode(sha256(convert_to(p, 'UTF8')), 'hex');
+$$;
+
+-- how long a business has to answer before the job moves on
+create or replace function gc_offer_window(p_timing text) returns interval language sql immutable as $$
+  select case p_timing when 'urgent' then interval '4 hours' when 'week' then interval '24 hours' else interval '48 hours' end;
+$$;
+
+-- What a business sees about a lead. The client's contact details only once accepted.
+create or replace function gc_lead_view(p_lead uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'lead_id', ld.id, 'status', ld.status, 'nearby', ld.nearby, 'offered_at', ld.offered_at,
+    'match', case when ld.relevance >= 0.3 then 'strong' else 'possible' end,
+    'expires_at', ld.expires_at, 'responded_at', ld.responded_at,
+    'listing_id', l.public_id, 'listing_name', l.name, 'listing_slug', l.slug,
+    'job', jsonb_build_object(
+      'ref', j.ref, 'service', j.service, 'details', j.details, 'timing', j.timing, 'budget', j.budget,
+      'category', c.name, 'city', loc.name, 'status', j.status, 'created_at', j.created_at,
+      'client_first_name', split_part(btrim(j.client_name), ' ', 1)),
+    'client', case when ld.status = 'accepted'
+      then jsonb_build_object('name', j.client_name, 'email', j.client_email, 'phone', j.client_phone) end)
+  from gc_leads ld
+  join gc_jobs j on j.id = ld.job_id
+  join gc_listings l on l.public_id = ld.listing_id
+  left join gc_categories c on c.slug = j.category
+  left join gc_locations loc on loc.slug = j.city
+  where ld.id = p_lead;
+$$;
+
+-- Offers a job to the best available businesses until three are offered or have accepted.
+--   Eligible: approved Blue or Gold, same category, same town or (when the town runs
+--   short) same province, has an email, and not offered this job before.
+--   Order:   1. strong match between the job and the business's speciality and services
+--            2. same town before nearby   3. Gold before Blue   4. response rate
+--            5. rating   6. fewer leads this week (fair spread)   7. stable tiebreak
+create or replace function gc_match_job(p_job uuid) returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  j gc_jobs; prov text; active int; need int; added int := 0; c record; t text; lid uuid; next_rank int;
+begin
+  select * into j from gc_jobs where id = p_job for update;
+  if not found or j.status = 'closed' then return 0; end if;
+  select count(*) into active from gc_leads where job_id = j.id and status in ('offered', 'accepted');
+  need := 3 - active;
+
+  if need > 0 then
+    select province_slug into prov from gc_locations where slug = j.city;
+    select coalesce(max(rank), 0) into next_rank from gc_leads where job_id = j.id;
+    for c in
+      with svc as (select listing_id, string_agg(name, ' ') as names from gc_services group by listing_id),
+      perf as (
+        select listing_id,
+               count(*) filter (where status in ('accepted', 'declined'))::numeric
+                 / nullif(count(*) filter (where status in ('accepted', 'declined', 'expired')), 0) as rr,
+               count(*) filter (where offered_at > now() - interval '7 days') as recent
+        from gc_leads group by listing_id),
+      cand as (
+        select l.public_id, (l.city = j.city) as in_city,
+               case l.tier when 'gold' then 2 when 'blue' then 1 else 0 end as tier_rank,
+               greatest(
+                 word_similarity(lower(j.service), lower(coalesce(l.subcategory, '') || ' ' || coalesce(svc.names, '') || ' ' || coalesce(l.tagline, ''))),
+                 similarity(lower(j.service), lower(coalesce(l.subcategory, '')))
+               )::real as rel,
+               coalesce(p.rr, 0.5) as rr, coalesce(p.recent, 0) as recent, r.avg_rating
+        from gc_listings l
+        join gc_locations loc on loc.slug = l.city
+        left join svc on svc.listing_id = l.public_id
+        left join perf p on p.listing_id = l.public_id
+        left join gc_ratings_summary r on r.listing_id = l.public_id
+        where l.status = 'approved' and l.tier in ('gold', 'blue')
+          and l.category = j.category
+          and (l.city = j.city or loc.province_slug = prov)
+          and coalesce(btrim(l.email), '') <> ''
+          and not exists (select 1 from gc_leads x where x.job_id = j.id and x.listing_id = l.public_id))
+      select * from cand
+      -- accuracy: when any business genuinely matches the job, only matching
+      -- businesses are offered it. Loose matches are used only when nothing
+      -- matches at all, and are shown to the business as a "possible match".
+      where rel >= 0.3
+         or (not exists (select 1 from cand c2 where c2.rel >= 0.3)
+             and not exists (select 1 from gc_leads x where x.job_id = j.id and x.relevance >= 0.3))
+      order by (rel >= 0.3) desc, in_city desc, tier_rank desc, rr desc, avg_rating desc nulls last, recent asc,
+               md5(j.id::text || public_id)
+      limit need
+    loop
+      t := gc_new_token(); next_rank := next_rank + 1;
+      insert into gc_leads (job_id, listing_id, rank, nearby, relevance, token_hash, expires_at)
+      values (j.id, c.public_id, next_rank, not c.in_city, c.rel, gc_token_hash(t), now() + gc_offer_window(j.timing))
+      returning id into lid;
+      perform gc_notify('lead_offered', jsonb_build_object('lead_id', lid, 'token', t));
+      added := added + 1;
+    end loop;
+  end if;
+
+  if exists (select 1 from gc_leads where job_id = j.id and status = 'accepted') then
+    update gc_jobs set status = 'matched', updated_at = now() where id = j.id and status <> 'matched';
+  elsif not exists (select 1 from gc_leads where job_id = j.id and status = 'offered') then
+    if j.status <> 'no_match' then
+      update gc_jobs set status = 'no_match', updated_at = now() where id = j.id;
+      perform gc_notify('job_no_match', jsonb_build_object('job_id', j.id));
+    end if;
+  end if;
+  return added;
+end $$;
+
+-- A business accepts or declines an offer. Returns {ok, error?, lead}.
+create or replace function gc_respond_lead(p_lead uuid, p_action text, p_reason text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare ld gc_leads; js text;
+begin
+  if p_action not in ('accept', 'decline') then return jsonb_build_object('ok', false, 'error', 'Unknown action.'); end if;
+  select * into ld from gc_leads where id = p_lead for update;
+  if not found then return jsonb_build_object('ok', false, 'error', 'This job could not be found.'); end if;
+  select status into js from gc_jobs where id = ld.job_id;
+
+  if ld.status = 'accepted' and p_action = 'accept' then
+    return jsonb_build_object('ok', true, 'lead', gc_lead_view(ld.id));            -- already accepted
+  end if;
+  if ld.status <> 'offered' or js = 'closed' then
+    return jsonb_build_object('ok', false, 'error', 'This job is no longer available.', 'lead', gc_lead_view(ld.id));
+  end if;
+  if ld.expires_at < now() then
+    update gc_leads set status = 'expired' where id = ld.id;
+    perform gc_match_job(ld.job_id);
+    return jsonb_build_object('ok', false, 'error', 'This offer expired and was passed to another business.', 'lead', gc_lead_view(ld.id));
+  end if;
+
+  if p_action = 'accept' then
+    update gc_leads set status = 'accepted', responded_at = now() where id = ld.id;
+    update gc_jobs set status = 'matched', updated_at = now() where id = ld.job_id;
+    perform gc_notify('lead_accepted', jsonb_build_object('lead_id', ld.id));
+  else
+    update gc_leads set status = 'declined', responded_at = now(), decline_reason = left(nullif(btrim(p_reason), ''), 200) where id = ld.id;
+    perform gc_match_job(ld.job_id);
+  end if;
+  return jsonb_build_object('ok', true, 'lead', gc_lead_view(ld.id));
+end $$;
+
+-- The client closes their job: open offers are withdrawn.
+create or replace function gc_close_job(p_job uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update gc_leads set status = 'withdrawn' where job_id = p_job and status = 'offered';
+  update gc_jobs set status = 'closed', closed_at = now(), updated_at = now() where id = p_job and status <> 'closed';
+end $$;
+
+-- Every 10 minutes: unanswered offers expire and move to the next match;
+-- jobs older than 30 days close.
+create or replace function gc_lead_sweep() returns int
+language plpgsql security definer set search_path = public as $$
+declare ids uuid[]; jid uuid; n int := 0;
+begin
+  with x as (update gc_leads set status = 'expired' where status = 'offered' and expires_at < now() returning job_id)
+  select array_agg(distinct job_id) into ids from x;
+  if ids is not null then
+    foreach jid in array ids loop n := n + gc_match_job(jid); end loop;
+  end if;
+  for jid in select id from gc_jobs where status <> 'closed' and created_at < now() - interval '30 days' loop
+    perform gc_close_job(jid);
+  end loop;
+  return n;
+end $$;
+
+do $$ begin
+  begin
+    create extension if not exists pg_cron;
+  exception when others then raise notice 'pg_cron is not available here; enable it under Database > Extensions';
+  end;
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    perform cron.schedule('gc-lead-sweep', '*/10 * * * *', 'select public.gc_lead_sweep()');
+  end if;
+end $$;
+
+
+-- ===================================================================== business owners
+create or replace function gc_is_owner(p_listing text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from gc_owners where user_id = auth.uid() and listing_id = p_listing);
+$$;
+
+-- Links the signed-in user to every listing whose email they have proved they control.
+create or replace function gc_claim_listings() returns setof text
+language plpgsql security definer set search_path = public as $$
+declare em text;
+begin
+  if auth.uid() is null then raise exception 'Sign in first.'; end if;
+  select lower(btrim(email)) into em from auth.users where id = auth.uid() and email_confirmed_at is not null;
+  if em is null then raise exception 'Confirm your email address first.'; end if;
+  insert into gc_owners (user_id, listing_id)
+    select auth.uid(), public_id from gc_listings
+     where lower(btrim(email)) = em and status in ('approved', 'pending')
+  on conflict do nothing;
+  return query select listing_id from gc_owners where user_id = auth.uid() order by created_at;
+end $$;
+
+create or replace function gc_owner_update(p_listing text, p jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare cur gc_listings; v_desc text; v_site text;
+begin
+  if not gc_is_owner(p_listing) then raise exception 'Not your listing.'; end if;
+  select * into cur from gc_listings where public_id = p_listing;
+  v_desc := case when p ? 'description' then btrim(p->>'description') else cur.description end;
+  if char_length(v_desc) < 50 then raise exception 'The description must be at least 50 characters.'; end if;
+  if p ? 'phone' and btrim(p->>'phone') = '' then raise exception 'A phone number is required.'; end if;
+  v_site := case when p ? 'website' then nullif(btrim(p->>'website'), '') else cur.website end;
+  if v_site is null then raise exception 'A website is required: every listing displays the Getclient badge.'; end if;
+  update gc_listings set
+    tagline      = case when p ? 'tagline'      then left(nullif(btrim(p->>'tagline'), ''), 120) else tagline end,
+    description  = v_desc,
+    subcategory  = case when p ? 'subcategory'  then left(nullif(btrim(p->>'subcategory'), ''), 80) else subcategory end,
+    address      = case when p ? 'address'      then left(nullif(btrim(p->>'address'), ''), 200) else address end,
+    phone        = case when p ? 'phone'        then left(btrim(p->>'phone'), 40) else phone end,
+    employees    = case when p ? 'employees'    then left(nullif(btrim(p->>'employees'), ''), 20) else employees end,
+    contact_name = case when p ? 'contact_name' then left(nullif(btrim(p->>'contact_name'), ''), 120) else contact_name end,
+    contact_role = case when p ? 'contact_role' then left(nullif(btrim(p->>'contact_role'), ''), 80) else contact_role end,
+    website      = v_site,
+    -- a new website must show the badge again
+    badge_verified_at = case when v_site is distinct from cur.website then null else badge_verified_at end,
+    badge_url         = case when v_site is distinct from cur.website then null else badge_url end
+  where public_id = p_listing;
+end $$;
+
+create or replace function gc_owner_set_services(p_listing text, p jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare cap int; t text;
+begin
+  if not gc_is_owner(p_listing) then raise exception 'Not your listing.'; end if;
+  select tier::text into t from gc_listings where public_id = p_listing;
+  cap := case t when 'gold' then 12 when 'blue' then 8 else 0 end;
+  if cap = 0 then raise exception 'Services are a Blue and Gold feature.'; end if;
+  if jsonb_typeof(p) <> 'array' or jsonb_array_length(p) > cap then
+    raise exception 'Up to % services on your tier.', cap;
+  end if;
+  delete from gc_services where listing_id = p_listing;
+  insert into gc_services (listing_id, name, description, price_from, sort)
+  select p_listing, left(btrim(e->>'name'), 80), left(nullif(btrim(e->>'description'), ''), 280),
+         left(nullif(btrim(e->>'price_from'), ''), 40), (o - 1)::int
+  from jsonb_array_elements(p) with ordinality as x(e, o)
+  where char_length(btrim(coalesce(e->>'name', ''))) >= 2;
+end $$;
+
+create or replace function gc_owner_delete_photo(p_id uuid) returns text
+language plpgsql security definer set search_path = public as $$
+declare v_path text;
+begin
+  delete from gc_photos where id = p_id and gc_is_owner(listing_id) returning path into v_path;
+  if v_path is null then raise exception 'Not your photo.'; end if;
+  return v_path;
+end $$;
+
+create or replace function gc_owner_mark_quote(p_id uuid, p_answered boolean default true) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update gc_quotes set responded_at = case when p_answered then coalesce(responded_at, now()) end
+   where id = p_id and gc_is_owner(business_id);
+  if not found then raise exception 'Not your quote request.'; end if;
+end $$;
+
+create or replace function gc_owner_leads(p_listing text) returns setof jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  if not gc_is_owner(p_listing) then raise exception 'Not your listing.'; end if;
+  return query select gc_lead_view(id) from gc_leads where listing_id = p_listing order by offered_at desc limit 200;
+end $$;
+
+create or replace function gc_owner_respond_lead(p_lead uuid, p_action text, p_reason text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare lid text;
+begin
+  select listing_id into lid from gc_leads where id = p_lead;
+  if lid is null or not gc_is_owner(lid) then raise exception 'Not your job offer.'; end if;
+  return gc_respond_lead(p_lead, p_action, p_reason);
+end $$;
+
+-- Last 30 days for the owner's listing, plus the average for each tier in the
+-- same category (what the dashboard uses to show what an upgrade would bring).
+create or replace function gc_owner_stats(p_listing text) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare cat text; res jsonb;
+begin
+  if not gc_is_owner(p_listing) then raise exception 'Not your listing.'; end if;
+  select category into cat from gc_listings where public_id = p_listing;
+  select jsonb_build_object(
+    'views',          (select count(*) from gc_events where listing_id = p_listing and kind = 'view' and day > current_date - 30),
+    'badge_clicks',   (select count(*) from gc_events where listing_id = p_listing and kind = 'badge_click' and day > current_date - 30),
+    'website_clicks', (select count(*) from gc_events where listing_id = p_listing and kind = 'website_click' and day > current_date - 30),
+    'phone_clicks',   (select count(*) from gc_events where listing_id = p_listing and kind in ('phone_click', 'whatsapp_click') and day > current_date - 30),
+    'quotes',         (select count(*) from gc_quotes where business_id = p_listing and created_at > now() - interval '30 days'),
+    'leads_offered',  (select count(*) from gc_leads where listing_id = p_listing and offered_at > now() - interval '30 days'),
+    'leads_accepted', (select count(*) from gc_leads where listing_id = p_listing and status = 'accepted' and offered_at > now() - interval '30 days'),
+    'response_rate',  (select response_rate from gc_listings_public where id = p_listing),
+    'category_views', (select jsonb_object_agg(tier, avg_views) from (
+        select l.tier::text as tier, round(avg(coalesce(v.n, 0)), 1) as avg_views
+        from gc_listings l
+        left join (select listing_id, count(*) n from gc_events where kind = 'view' and day > current_date - 30 group by listing_id) v
+               on v.listing_id = l.public_id
+        where l.status = 'approved' and l.category = cat group by l.tier) t)
+  ) into res;
+  return res;
+end $$;
+
+-- Counts a profile view or click once per visitor per day.
+create or replace function gc_track(p_listing text, p_kind text) returns void
+language plpgsql security definer set search_path = public as $$
+declare h json; v text;
+begin
+  if p_kind not in ('view', 'badge_click', 'website_click', 'phone_click', 'whatsapp_click') then return; end if;
+  if not exists (select 1 from gc_listings where public_id = p_listing and status = 'approved') then return; end if;
+  h := coalesce(current_setting('request.headers', true), '{}')::json;
+  v := md5(coalesce(h ->> 'x-forwarded-for', h ->> 'cf-connecting-ip', '') || '|' || coalesce(h ->> 'user-agent', ''));
+  insert into gc_events (listing_id, kind, visitor) values (p_listing, p_kind, v) on conflict do nothing;
+end $$;
+
+-- RLS for the new tables (the browser reaches them only through the functions above)
+alter table gc_jobs        enable row level security;
+alter table gc_leads       enable row level security;
+alter table gc_owners      enable row level security;
+alter table gc_events      enable row level security;
+alter table gc_wa_sessions enable row level security;
+alter table gc_wa_seen     enable row level security;
+
+drop policy if exists gc_jobs_admin   on gc_jobs;
+create policy gc_jobs_admin   on gc_jobs   for select using (gc_is_admin());
+drop policy if exists gc_leads_admin  on gc_leads;
+create policy gc_leads_admin  on gc_leads  for select using (gc_is_admin());
+drop policy if exists gc_owners_read  on gc_owners;
+create policy gc_owners_read  on gc_owners for select using (user_id = auth.uid() or gc_is_admin());
+drop policy if exists gc_events_admin on gc_events;
+create policy gc_events_admin on gc_events for select using (gc_is_admin());
+
+-- owners read their own listing (all columns) and the quote requests sent to it
+drop policy if exists gc_owner_read   on gc_listings;
+create policy gc_owner_read   on gc_listings for select using (gc_is_owner(public_id));
+drop policy if exists gc_services_owner on gc_services;
+create policy gc_services_owner on gc_services for select using (gc_is_owner(listing_id));
+drop policy if exists gc_owner_quotes on gc_quotes;
+create policy gc_owner_quotes on gc_quotes   for select using (gc_is_owner(business_id));
+
+revoke all on gc_jobs, gc_leads, gc_events, gc_wa_sessions, gc_wa_seen from anon;
+revoke insert, update, delete on gc_jobs, gc_leads, gc_owners, gc_events, gc_wa_sessions, gc_wa_seen from authenticated;
+revoke all on gc_wa_sessions, gc_wa_seen from authenticated;
+grant select on gc_jobs, gc_leads, gc_owners, gc_events to authenticated;
+
+do $$
+declare f text;
+begin
+  -- server-only (edge functions, cron)
+  foreach f in array array['gc_notify(text,jsonb)', 'gc_new_token()', 'gc_lead_view(uuid)', 'gc_match_job(uuid)',
+                           'gc_respond_lead(uuid,text,text)', 'gc_close_job(uuid)', 'gc_lead_sweep()'] loop
+    execute format('revoke all on function %s from public, anon, authenticated', f);
+    execute format('grant execute on function %s to service_role', f);
+  end loop;
+  -- signed-in owners
+  foreach f in array array['gc_claim_listings()', 'gc_owner_update(text,jsonb)',
+                           'gc_owner_set_services(text,jsonb)', 'gc_owner_delete_photo(uuid)', 'gc_owner_mark_quote(uuid,boolean)',
+                           'gc_owner_leads(text)', 'gc_owner_respond_lead(uuid,text,text)', 'gc_owner_stats(text)'] loop
+    execute format('revoke all on function %s from public, anon', f);
+    execute format('grant execute on function %s to authenticated, service_role', f);
+  end loop;
+  -- anyone: gc_is_owner is used by row security, and is simply false for the public
+  execute 'revoke all on function gc_is_owner(text) from public';
+  execute 'grant execute on function gc_is_owner(text) to anon, authenticated, service_role';
+  -- anyone (profile views and clicks)
+  execute 'revoke all on function gc_track(text,text) from public';
+  execute 'grant execute on function gc_track(text,text) to anon, authenticated';
+end $$;
 
 
 -- ===================================================================== after running

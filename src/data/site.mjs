@@ -81,6 +81,8 @@ export const TIERS = [
   ['Contact details (phone, email, website)', true, true, true],
   ['WhatsApp button', false, true, true],
   ['Quote requests from clients, emailed to you', false, true, true],
+  ['Job offers from Get quotes matching (you accept or decline)', false, 'Yes', 'Yes, offered first'],
+  ['Business dashboard: stats, edit listing, answer jobs', true, true, true],
   ['Photos', false, 'Up to 6', 'Up to 20, plus a cover image'],
   ['List your services', false, 'Up to 8 services', 'Up to 12 services'],
   ['Identity and CIPC check', false, true, true],

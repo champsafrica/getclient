@@ -58,6 +58,7 @@ export function home(ctx) {
       <h1>Hire local.<br>Hire <em>checked</em>.</h1>
       <p class="lede">Getclient lists South African businesses that have passed identity and CIPC checks. Every profile shows exactly which checks it passed and when, so a badge here means something you can point at.</p>
       ${searchForm()}
+      <p class="hero-quotes"><a class="btn btn-w" href="/get-quotes/"><i class="fa-solid fa-bolt"></i> Get quotes from 3 verified businesses</a><span>Free · one request · no account</span></p>
       <div class="quick"><span>Popular:</span>${['contractors-and-trades', 'digital-and-tech', 'healthcare-and-medical', 'business-services'].map(s => `<a href="/c/${s}/">${esc(catBy[s].short)}</a>`).join('')}<a href="/l/cape-town/">Cape Town</a><a href="/l/johannesburg/">Johannesburg</a></div>
     </div>
     ${show ? `<div class="hero__card">
@@ -202,6 +203,7 @@ export function category(ctx, c, city) {
   <p class="lede" style="margin-top:1rem">${esc(c.lede)}</p>
   <div class="chips" style="margin-top:1rem">${c.covers.map(s => `<a class="chip" href="/search/?q=${encodeURIComponent(s)}&amp;cat=${c.slug}">${esc(s)}</a>`).join('')}</div></div></section>
   <section class="sec"><div class="wrap">
+    <div class="cta-quotes" style="margin-bottom:1.6rem"><div><b>Need ${esc(c.short.toLowerCase())} help${city ? ' in ' + esc(city.name) : ''}?</b><br><span>Describe the job once and up to three verified businesses that match it will contact you.</span></div><a class="btn btn-p" href="/get-quotes/?cat=${c.slug}${city ? '&amp;loc=' + city.slug : ''}">Get quotes</a></div>
     <div class="head"><h2 style="margin:0;font-size:1.3rem"><span data-gc-count>${list.length}</span> listed</h2>
     <a class="btn btn-g btn-s" href="/search/?cat=${c.slug}${city ? '&amp;loc=' + city.slug : ''}"><i class="fa-solid fa-sliders"></i> Filter and search</a></div>
     ${listingGrid(list, cfg, [`No ${c.short.toLowerCase()} listings${city ? ' in ' + city.name : ''} yet`, `Nothing here has cleared review yet. Local businesses can list free and appear here once approved.`])}
@@ -252,7 +254,7 @@ export function city(ctx, c) {
   const body = `<section class="ph">${ySvg('y', 'rgba(22,82,240,.07)', 'rgba(22,82,240,.12)')}<div class="wrap">${crumbs(it)}
   <p class="eyebrow">${p.name}</p><h1>Checked businesses in ${c.name}</h1><p class="lede">Businesses trading in and around ${c.name}, each with its verification record on the profile.</p>
   ${near.length ? `<div class="chips" style="margin-top:1rem"><span class="mut" style="font-size:.84rem;align-self:center">Nearby:</span>${near.map(x => `<a class="chip" href="/l/${x.slug}/">${x.name}</a>`).join('')}</div>` : ''}</div></section>
-  <section class="sec"><div class="wrap">${listingGrid(list, cfg, [`No ${c.name} listings yet`, `Nothing in ${c.name} has cleared review yet. Local businesses can list free and appear here once approved.`])}</div></section>
+  <section class="sec"><div class="wrap"><div class="cta-quotes" style="margin-bottom:1.6rem"><div><b>Need a business in ${esc(c.name)}?</b><br><span>One request, up to three verified businesses that match your job.</span></div><a class="btn btn-p" href="/get-quotes/?loc=${c.slug}">Get quotes</a></div>${listingGrid(list, cfg, [`No ${c.name} listings yet`, `Nothing in ${c.name} has cleared review yet. Local businesses can list free and appear here once approved.`])}</div></section>
   ${featBlock(list, 'Featured in ' + c.name, cfg)}
   <section class="sec sec--surf"><div class="wrap"><h2 style="font-size:1.4rem;margin-bottom:1.2rem">Categories in ${c.name}</h2>
   <div class="linkgrid">${CATS.map(k => `<a href="/c/${k.slug}/${c.slug}/"><span>${esc(k.short)}</span><span class="c" data-gc-n-pair="${k.slug}|${c.slug}">${n.pair[k.slug + '|' + c.slug] || 0}</span></a>`).join('')}</div></div></section>`;

@@ -156,7 +156,10 @@
         .then(function (r) { cache[s] = r.error ? null : (r.data || []); });
     }).concat([
       sb.from(T('quotes')).select('*').order('created_at', { ascending: false }).limit(200)
-        .then(function (r) { cache.quotes = r.error ? null : (r.data || []); })
+        .then(function (r) { cache.quotes = r.error ? null : (r.data || []); }),
+      sb.from(T('jobs')).select('*, ' + T('leads') + '(listing_id, status, rank, nearby, relevance, offered_at, responded_at, decline_reason)')
+        .order('created_at', { ascending: false }).limit(200)
+        .then(function (r) { cache.jobs = r.error ? null : (r.data || []); })
     ])).then(function () { counts(); render(); });
   }
   function counts() {
@@ -244,6 +247,22 @@
       docs + verify + '<div data-reject-box></div></article>';
   }
 
+  // smart quote matching: every job, and exactly what happened with each offer
+  function jobCard(j) {
+    var leads = (j[T('leads')] || []).slice().sort(function (a, b) { return a.rank - b.rank; });
+    var tone = { matching: 'tier--blue', matched: 'tier--gold', no_match: 'tier--none', closed: 'tier--none' }[j.status] || 'tier--none';
+    var st = { offered: 'pillwait', accepted: 'pillok', declined: 'pillno', expired: 'pillno', withdrawn: 'pillwait' };
+    return '<article class="areq"><div class="areq__h"><div><h3>' + esc(j.service) + ' <span class="tier ' + tone + '">' + esc(j.status.replace('_', ' ')) + '</span><span class="tier tier--listed">' + esc(j.ref) + '</span></h3>' +
+      '<div class="areq__m"><span>' + esc(j.category) + ' · ' + esc(j.city) + '</span><span>' + esc(j.timing) + '</span>' + (j.budget ? '<span>' + esc(j.budget) + '</span>' : '') +
+      '<span>' + esc(j.source) + '</span><span>' + date(j.created_at) + '</span></div></div></div>' +
+      '<div class="areq__g"><div class="abox"><h4>Client</h4>' + esc(j.client_name) + '<br>' + (j.client_email ? '<a href="mailto:' + esc(j.client_email) + '">' + esc(j.client_email) + '</a><br>' : '') + esc(j.client_phone || '') + '</div>' +
+      '<div class="abox" style="grid-column:span 2"><h4>Offers</h4>' + (leads.length ? leads.map(function (l) {
+        return '<div style="margin:.2rem 0"><span class="' + (st[l.status] || 'pillwait') + '">' + esc(l.status) + '</span> <code>' + esc(l.listing_id) + '</code> #' + l.rank +
+          (l.nearby ? ' · nearby' : '') + ' · match ' + Math.round((l.relevance || 0) * 100) + '%' + (l.decline_reason ? ' · "' + esc(l.decline_reason) + '"' : '') + '</div>';
+      }).join('') : '<i>No verified business could take it.</i>') + '</div></div>' +
+      '<p style="white-space:pre-wrap;font-size:.88rem;margin:.8rem 0 0">' + esc(j.details) + '</p></article>';
+  }
+
   function quoteCard(q) {
     return '<article class="areq"><div class="areq__h"><div><h3>' + esc(q.name || '') + '</h3><div class="areq__m"><span>To <code>' + esc(q.business_id || '') + '</code></span><span>' + date(q.created_at) + '</span></div></div>' +
       '<div class="areq__acts"><a class="btn btn-g btn-s" href="mailto:' + esc(q.email || '') + '">Email ' + esc(q.email || '') + '</a></div></div>' +
@@ -260,13 +279,13 @@
       return;
     }
     rows = (rows || []).filter(function (x) {
-      return !filter || [x.name, x.public_id, x.email, x.business_id, x.city].join(' ').toLowerCase().indexOf(filter) > -1;
+      return !filter || [x.name, x.public_id, x.email, x.business_id, x.city, x.ref, x.service, x.client_name, x.client_email].join(' ').toLowerCase().indexOf(filter) > -1;
     });
     if (!rows.length) {
-      queue.innerHTML = '<div class="empty"><h3>Nothing here</h3><p>No ' + (current === 'quotes' ? 'quote requests' : current + ' applications') + (filter ? ' match that search' : ' right now') + '.</p></div>';
+      queue.innerHTML = '<div class="empty"><h3>Nothing here</h3><p>No ' + (current === 'quotes' ? 'quote requests' : current === 'jobs' ? 'jobs' : current + ' applications') + (filter ? ' match that search' : ' right now') + '.</p></div>';
       return;
     }
-    queue.innerHTML = rows.map(current === 'quotes' ? quoteCard : card).join('');
+    queue.innerHTML = rows.map(current === 'quotes' ? quoteCard : current === 'jobs' ? jobCard : card).join('');
   }
 
   /* ---------- actions ---------- */

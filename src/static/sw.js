@@ -32,7 +32,8 @@ self.addEventListener('fetch', e => {
 
   // never cache the database, the reviewer panel, or verification records
   if (url.hostname.endsWith('supabase.co') ||
-      url.pathname.startsWith('/admin') ||
+      url.pathname.startsWith('/admin') || url.pathname.startsWith('/dashboard') ||
+      url.pathname.startsWith('/job/') || url.pathname.startsWith('/lead/') ||
       url.pathname.startsWith('/verify/') ||
       url.pathname === '/config.js') return;
 

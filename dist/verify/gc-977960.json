@@ -1,1 +1,1 @@
-{"id":"gc-977960","slug":"tlp-group","name":"TLP Group","tier":"gold","listed":true,"url":"/b/tlp-group/","official":false,"verified_at":null,"checks":["identity","cipc","trading_history"],"generated":"2026-10-19"}
+{"id":"gc-977960","slug":"tlp-group","name":"TLP Group","tier":"blue","listed":true,"url":"/b/tlp-group/","official":false,"verified_at":"2026-10-25","checks":["identity","cipc","trading_history","reviews"],"generated":"2026-10-25"}

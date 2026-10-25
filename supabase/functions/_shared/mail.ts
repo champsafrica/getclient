@@ -51,3 +51,22 @@ export const badgeCode = (id: string) =>
 
 export const PLAN_NAME: Record<string, string> = { basic: 'Basic listing', blue: 'Blue Verified', gold: 'Gold Verified' };
 export { ORIGIN };
+
+/** The welcome email every new application gets, from the website or WhatsApp. */
+export function sendWelcome(o: { to: string; name: string; contact?: string; plan: string; id: string; badgeFound: boolean }) {
+  return send({
+    to: o.to, subject: `Welcome to Getclient, ${o.name}`,
+    html: shell('Welcome to Getclient',
+      `<p>Hi ${esc(o.contact || o.name)},</p>
+       <p>Thank you for listing <b>${esc(o.name)}</b> on Getclient. Your application for a
+       <b>${PLAN_NAME[o.plan] || 'listing'}</b> is in. Your listing ID is <b>${esc(o.id)}</b>.</p>
+       <p>A person reviews every submission, usually within one to two business days. We will email you as soon as it is approved.</p>
+       <p><b>Your badge.</b> ${o.badgeFound ? 'We found the Listed on Getclient badge on your website. Thank you.'
+         : 'We could not find the badge on your website yet. Your listing cannot be approved until it is there.'}
+       Keep this code on your site. Once you are approved it shows your tier and links visitors to your profile:</p>
+       ${badgeCode(o.id)}
+       ${button(`${ORIGIN}/badge/?id=${encodeURIComponent(o.id)}`, 'See all badge styles')}
+       <p>Once approved, manage your listing, answer job requests and see your stats in your
+       <a href="${ORIGIN}/dashboard/">business dashboard</a>. Sign in there with this email address.</p>`, o.plan),
+  });
+}
