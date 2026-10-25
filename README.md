@@ -10,7 +10,7 @@ it only adds what is missing and never deletes or changes data. The Supabase pro
 
 ## Tiers
 
-| | Basic (free) | Blue Verified (R499 / year) | Gold Verified (R1,299 / year) |
+| | Basic (free) | Blue Verified (R499 / month) | Gold Verified (R1,299 / month) |
 | --- | --- | --- | --- |
 | Listed on Getclient badge on own website | Required | Required | Required |
 | Description and contact details | Yes | Yes | Yes |

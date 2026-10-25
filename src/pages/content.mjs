@@ -41,7 +41,7 @@ export function list() {
     <div class="step-pane" data-pane="1">
       ${stageBadge('Every tier carries the Getclient badge on its website. It is free and required.')}
       <h2 style="font-size:1.3rem;margin-bottom:.3rem">Which tier are you applying for?</h2>
-      <p class="lede" style="margin-bottom:1.3rem">Start on Basic and upgrade later if you like. Paid tiers are billed once a year, only after your documents and badge are checked. <a href="/pricing/#compare">Compare tiers</a>.</p>
+      <p class="lede" style="margin-bottom:1.3rem">Start on Basic and upgrade later if you like. Paid tiers are billed monthly, starting only after your documents and badge are checked. <a href="/pricing/#compare">Compare tiers</a>.</p>
       <div class="picks">
         ${pick('basic', 'Basic', 'R0', 'free forever', 'A description of your business and your contact details.', 'No documents needed', true)}
         ${pick('blue', 'Blue Verified', SITE.prices.blue, SITE.period, 'Identity and CIPC confirmed. Photos, quote requests and the Blue Verified showcase on every page.', 'CIPC document + ID or passport')}
@@ -163,7 +163,7 @@ export function pricing() {
   const li = (ok, t) => `<li${ok ? '' : ' class="no"'}><span style="color:${ok ? 'var(--blue)' : 'inherit'}">${ok ? '<i class="fa-solid fa-check"></i>' : '–'}</span> ${t}</li>`;
   const plan = (cls, chip, price, per, d, items, href, btn, b) => `<div class="plan${cls}">${chip}<div class="plan__price">${price}</div><div class="plan__period">${per}</div>
     <p style="font-size:.9rem;color:var(--mut)">${d}</p><ul>${items.map(([o, t]) => li(o, t)).join('')}</ul><a class="btn ${b} btn-blk" href="${href}">${btn}</a></div>`;
-  const body = `${ph(it, 'Pricing', 'Free to be listed. Paid once a year to be verified.', 'Every tier carries the Listed on Getclient badge on its own website. Blue and Gold are billed once a year and pay for the verification work and the promotion. If a check fails, we refund and you stay on Basic.')}
+  const body = `${ph(it, 'Pricing', 'Free to be listed. Paid monthly to be verified.', 'Every tier carries the Listed on Getclient badge on its own website. Blue and Gold are billed monthly, with no long contract, and pay for the verification work and the promotion. If a check fails, we refund and you stay on Basic.')}
 <section class="sec"><div class="wrap"><div class="plans">
   ${plan('', '<span class="tier tier--none">Basic</span>', 'R0', 'free forever', 'A description of your business and your contact details. That is all.',
     [[1, 'Directory listing and profile page'], [1, 'Business description'], [1, 'Contact details'], [1, '<b>Listed on Getclient</b> badge (required)'], [0, 'Photos'], [0, 'Services list'], [0, 'Quote requests'], [0, 'Promotion']], '/list/?plan=basic', 'Start free', 'btn-g')}
@@ -175,16 +175,16 @@ export function pricing() {
 <section class="sec sec--surf"><div class="wrap">
   <div class="head"><div><p class="eyebrow">Compare</p><h2 style="margin:0">Every benefit, side by side</h2></div></div>
   ${compareTable()}
-  <div class="note" style="margin-top:1.4rem">All prices in ZAR, billed once a year in advance through Paystack, and exclude VAT. Verification is re-run every 12 months on renewal.</div>
+  <div class="note" style="margin-top:1.4rem">All prices in ZAR, billed monthly in advance through Paystack, and exclude VAT. Cancel any time; your tier stays active until the end of the paid month. Verification is re-run every 12 months.</div>
 </div></section>
 <section class="sec"><div class="wrap"><h2 style="margin-bottom:1.6rem">Common questions</h2>${cards([
   ['Why must every listing show the badge?', 'The badge is how Getclient grows and how your visitors check you are real. Every application has to show the Listed on Getclient badge on its website before it can be approved, on every tier.'],
   ['Can I buy a badge without the check?', 'No. The tier is set by our reviewers after the checks pass, and the applicant cannot set it themselves. Paying for Blue or Gold buys the verification work and the promotion, not the badge on its own.'],
   ['What exactly does Gold advertising include?', 'Gold businesses appear in the sponsored bar at the top of every page, in the featured Gold section at the bottom of every page, first in every list, beside other businesses’ profiles and above search results. Every placement is labelled Ad.'],
   ['What does Blue promotion include?', 'Blue Verified businesses appear in the Blue Verified showcase on every page, directly under the Gold section, and rank above every Basic listing.'],
-  ['What happens if I do not renew?', 'Your listing drops to Basic and stays in the directory with your description and contact details. The badge on your website switches to Listed on Getclient within 24 hours.'],
-  ['Do you take a commission on jobs?', 'No. Getclient charges a flat annual fee. What you agree with a client is between you and them.']])}</div></section>`;
-  return page({ title: 'Pricing and tier comparison', path: '/pricing/', body, desc: `Basic is free. Blue Verified ${SITE.prices.blue} per year. Gold Verified ${SITE.prices.gold} per year with ads on every page. Compare every benefit.` }, it);
+  ['What happens if I cancel or stop paying?', 'At the end of the paid month your listing drops to Basic and stays in the directory with your description and contact details. The badge on your website switches to Listed on Getclient within 24 hours.'],
+  ['Do you take a commission on jobs?', 'No. Getclient charges a flat monthly fee. What you agree with a client is between you and them.']])}</div></section>`;
+  return page({ title: 'Pricing and tier comparison', path: '/pricing/', body, desc: `Basic is free. Blue Verified ${SITE.prices.blue} per month. Gold Verified ${SITE.prices.gold} per month with ads on every page. Compare every benefit.` }, it);
 }
 
 /* ================================================================ badge */
@@ -353,7 +353,7 @@ export const terms = () => legal('/terms/', 'Terms of Service', `These terms gov
   ['2. What Getclient is not', 'Getclient introduces you to businesses. We are not a party to any agreement you reach with them, we do not supply their services, and we do not guarantee the outcome of any job. A verification badge confirms that specific checks passed on a stated date. It is not a warranty of workmanship.'],
   ['3. Listing rules', 'You may only submit a listing for a business you are authorised to represent. Information must be accurate and kept current. Listings that misstate registration, insurance or trading history are removed without refund.'],
   ['4. Badges', 'Every listed business must operate a website and display the Listed on Getclient badge on it, linking to Getclient, for as long as it is listed. Applications are approved only once the badge is found, and removing it may end the listing. Verification badges and the embeddable website badge remain our property and are licensed to you for as long as your listing is active, at the tier it holds. You may display the badge on properties you own, linking to your Getclient profile. You may not alter its colours, text or link, or display a tier you do not hold. The licence ends when your listing ends.'],
-  ['5. Fees', 'Blue Verified (R499) and Gold Verified (R1,299) are billed once a year in advance in ZAR through Paystack. A tier that is not renewed reverts to Basic at the end of the paid year. Verification fees cover the work of checking; where a check cannot be completed for reasons on our side, the fee is refunded.'],
+  ['5. Fees', 'Blue Verified (R499) and Gold Verified (R1,299) are billed monthly in advance in ZAR through Paystack. A tier may be cancelled at any time and reverts to Basic at the end of the paid month. Verification fees cover the work of checking; where a check cannot be completed for reasons on our side, the fee is refunded.'],
   ['6. Reviews and content', 'You keep ownership of what you post and grant us a licence to display it. We may remove content that is abusive, unlawful, off-topic or not traceable to a real transaction. We do not remove reviews because a business asks us to.'],
   ['7. Suspension', 'We may suspend or remove a listing that breaches these terms, misuses the badge, or is the subject of a substantiated complaint. Where practical we give notice and a chance to fix it.'],
   ['8. Liability', 'To the extent permitted by South African law, our liability arising from use of the directory is limited to the fees you paid us in the three months before the claim. Nothing here limits liability that cannot lawfully be limited, including under the Consumer Protection Act.'],

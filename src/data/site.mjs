@@ -18,7 +18,7 @@ export const SITE = {
     ['https://wa.me/27218793035', 'fa-brands fa-whatsapp', 'WhatsApp']
   ],
   prices: { blue: 'R499', gold: 'R1,299' },
-  period: 'per year',
+  period: 'per month',
   turnstileSiteKey: '0x4AAAAAAFavP5vcRoKQ-O30'
 };
 
@@ -74,7 +74,7 @@ export const provBy = Object.fromEntries(PROVINCES.map(p => [p.slug, p]));
 // What each tier gets. Drives the pricing comparison table and the plan cards.
 // true / false, or a short string shown in the cell.
 export const TIERS = [
-  ['Price', 'Free', 'R499 per year', 'R1,299 per year'],
+  ['Price', 'Free', 'R499 per month', 'R1,299 per month'],
   ['Listed on Getclient badge on your website', 'Required', 'Required, shows Blue Verified', 'Required, shows Gold Verified'],
   ['Directory listing and profile page', true, true, true],
   ['Business description', true, true, true],

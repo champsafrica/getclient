@@ -653,7 +653,7 @@
       if (p === 'basic') {
         rows = '<div class="sum-row"><span>Listing</span><b>Free</b></div>';
       } else {
-        rows = '<div class="sum-row"><span>' + name + ', 12 months</span><span>' + money(priced.base) + '</span></div>';
+        rows = '<div class="sum-row"><span>' + name + ', first month</span><span>' + money(priced.base) + '</span></div>';
         if (priced.discount_pct) {
           rows += '<div class="sum-row sum-row--off"><span>Discount ' + esc(priced.code) + ' (' +
             priced.discount_pct + '% off)</span><span>− ' + money(priced.base - priced.amount) + '</span></div>';

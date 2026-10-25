@@ -150,7 +150,7 @@ create table if not exists gc_payments (
   id          uuid primary key default gen_random_uuid(),
   listing_id  text references gc_listings(public_id) on delete set null on update cascade,
   plan        text,
-  amount      int,                    -- cents, ZAR (R499 / R1,299 per year)
+  amount      int,                    -- cents, ZAR (R499 / R1,299 per month)
   reference   text unique not null,
   channel     text,
   status      text default 'pending_verification',
@@ -507,7 +507,7 @@ begin
   return query select round(avg(r.stars)::numeric, 1), count(*)::int from gc_ratings r where r.listing_id = p_listing;
 end $$;
 
--- The single source of truth for what a plan costs (per year), with or without a code.
+-- The single source of truth for what a plan costs (per month), with or without a code.
 create or replace function gc_price(p_plan text, p_code text default null)
 returns table (plan text, base int, discount_pct int, amount int, code text, valid boolean, reason text)
 language plpgsql stable security definer set search_path = public as $$

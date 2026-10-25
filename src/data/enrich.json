@@ -60,12 +60,12 @@
       {
         "name": "Blue Verified",
         "description": "Identity and CIPC checked, photos, quote requests and the Blue Verified showcase.",
-        "price_from": "R499 per year"
+        "price_from": "R499 per month"
       },
       {
         "name": "Gold Verified",
         "description": "The full five checks, ads on every page, services, photos and a cover image.",
-        "price_from": "R1,299 per year"
+        "price_from": "R1,299 per month"
       },
       {
         "name": "Listed on Getclient badge",
