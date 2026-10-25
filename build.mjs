@@ -13,6 +13,7 @@ import { PROVINCES, CHECKS } from './src/data/site.mjs';
 import * as D from './src/pages/directory.mjs';
 import * as P from './src/pages/content.mjs';
 import * as J from './src/pages/jobs.mjs';
+import * as E from './src/pages/email.mjs';
 
 const ROOT = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'));
 const DIST = path.join(ROOT, 'dist');
@@ -139,6 +140,10 @@ async function main() {
   const today = now.toISOString().slice(0, 10);
   out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     urls.map(u => `  <url><loc>${SITE.origin}${esc(u)}</loc><lastmod>${today}</lastmod></url>`).join('\n') + `\n</urlset>\n`);
+
+  // Supabase Auth email (pasted into the dashboard, not uploaded with the site)
+  fs.mkdirSync(path.join(ROOT, 'supabase', 'templates'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, 'supabase', 'templates', 'sign-in-code.html'), E.signInEmail(rows.filter(b => b.tier === 'gold')));
 
   const n = fs.readdirSync(DIST, { recursive: true }).length;
   console.log(`Built ${urls.length} indexed pages, ${rows.length} listings, ${n} files -> dist/  (build ${hash})`);

@@ -3,7 +3,7 @@
  *  new cache and the old one is deleted on activate. This is what stops a stale
  *  app.js or live.js being pinned on a returning visitor's machine.
  */
-const BUILD = '27c3567685';
+const BUILD = '382d04ad6c';
 const CACHE = 'getclient-' + BUILD;
 const SHELL = ['/offline.html', '/logo.png', '/manifest.webmanifest', '/assets/brand/logo.svg', '/favicon.svg'];
 
